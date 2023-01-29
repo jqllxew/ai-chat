@@ -1,0 +1,83 @@
+
+chat:
+  openai:
+    # 查看地址 https://beta.openai.com/account/api-keys
+    api-key:
+    # 限制上下文最大请求文本长度
+    max-req-length: 1024
+    # 限制返回的tokens数量
+    max-resp-tokens: 512
+    # 可选模型默认第一个 参考https://beta.openai.com/docs/models/gpt-3
+    model-select:
+      - text-davinci-003
+      - text-curie-001
+      - text-babbage-001
+      - text-ada-001
+
+qq:
+  # CQ-http地址
+  cq-http-url: http://127.0.0.1:8700
+  # qq号
+  uid:
+  # 昵称
+  nickname:
+
+image:
+  diffusion:
+    # 提示词前缀
+    prefix-prompt: masterpiece,best quality,ultra detailed
+    # 默认负提示
+    default-neg-prompt: three arms,three hands,{lowres}, {{{{{{{{{{{blurry}}}}}}}}}}}, {{{{{{{{{bad hands}}}}}}}}},
+      {{{{{missing fingers}}}},(((missing hands))),((missing arms)),bad hands,{{{{{{{{{{{{{extra digit}}}}}}}}}}}}},
+      fewer digits,small hands,((three arms)),error, multiple limbs,bad feet,cropped,worst quality,low quality,jpeg artifacts,
+      bad anatomy,long nails,{{{{interlocked fingers}}}},((three hands)),milf,ugly,duplicate,morbid,mutilated,tranny,trans,
+      trannsexual,mutation,deformed,long neck,bad anatomy,bad proportions,extra arms,extra legs, disfigured,malformed,mutated,
+      hermaphrodite,out of frame,extra limbs,missing arms,missing legs,poorly drawn hands,poorty drawn face,mutation,poorly drawn,
+      long body,cloned face,mutated hands,bad hands,bad feet,long neck,missing limb,malformed limbs,malformed hands,fused fingers,
+      too many fingers,extra fingers,missing fingers,extra digit,fewer digits,mutated hands and fingers,lowres,text,error,cropped,jpeg
+    local: # 如果想要用api实现就注释掉local这一段
+      # 从抱脸下载之后的模型在 user/.cache/huggingface/diffusers 你可以移动到项目目录下，这里改为本地路径 ./xxx
+      model-id: CompVis/stable-diffusion-v1-4
+#      model-id: ./CompVis-stable-diffusion-v1-4/
+      # 是否支持图片参数
+      i2i-support: true
+      # 图片最大宽度 px
+      image-max-width: 824
+      # 图片最大高度 px
+      image-max-height: 824
+      # 引导规模
+      guidance: 7.5
+      # 步数
+      steps: 28
+    api:
+      # 文本->图像地址
+      url-txt2img: http://127.0.0.1:7860/sdapi/v1/txt2img
+      # 图像->图像地址
+      url-img2img: http://127.0.0.1:7860/sdapi/v1/img2img
+      # 图片最大宽度 px
+      image-max-width: 2048
+      # 图片最大高度 px
+      image-max-height: 2048
+      # 采样方法
+      sampler-index: Euler a
+      # 引导规模
+      cfg-scale: 7
+      # 步数
+      steps: 28
+      # 面部修复
+      restore-faces: true
+
+# 对象存储
+cos:
+  # 腾讯云cos 参考 https://console.cloud.tencent.com/cos
+  tx:
+    secret-id:
+    secret-key:
+    region:
+    bucket:
+
+fanyi:
+  # 有道智云 https://ai.youdao.com/console/
+  youdao:
+    app-key:
+    app-secret:

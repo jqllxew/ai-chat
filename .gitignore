@@ -1,0 +1,6 @@
+# created by virtualenv automatically
+.idea
+models
+venv
+__pycache__
+/config.yaml
