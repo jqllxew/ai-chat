@@ -55,14 +55,14 @@ image:
       # 图像->图像地址
       url-img2img: http://127.0.0.1:7860/sdapi/v1/img2img
       # 图片最大宽度 px
-      image-max-width: 2048
+      image-max-width: 1280
       # 图片最大高度 px
-      image-max-height: 2048
+      image-max-height: 1280
       # 采样方法
       sampler-index: Euler a
       # 引导规模
       cfg-scale: 7
-      # 步数
+      # 生成步数
       steps: 28
       # 面部修复
       restore-faces: true

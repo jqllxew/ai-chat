@@ -16,6 +16,8 @@ default_neg_prompt = display(diffusion_conf['default-neg-prompt'])
 api_conf = diffusion_conf['api']
 url_txt2img = display(api_conf['url-txt2img'])
 url_img2img = display(api_conf['url-img2img'])
+image_max_width = display(api_conf['image-max-width'])
+image_max_height = display(api_conf['image-max-height'])
 
 
 class ApiImage(ABC):
@@ -55,6 +57,7 @@ class ApiImage(ABC):
             api_url = url_img2img
         else:
             return None, "diffusion_api unknown implement"
+        print(f"prompt: {self.prompt}\nneg_prompt: {self.negative_prompt}")
         res = requests.post(api_url, json=self.__dict__)
         if res.status_code != 200:
             return None, str(res.content)
@@ -94,6 +97,8 @@ class ApiImg2Img(ApiImage):
 
 
 def inference(width, height, prompt, neg_prompt, seed, img=None) -> (Image, str):
+    if width > image_max_width or height > image_max_height:
+        return None, f"Error 抱歉,生成{width}x{height}图片已超过当前最大分辨率{image_max_width}x{image_max_height},请您调整参数"
     api: ApiImage
     if img is None:
         api = ApiTxt2Img(width, height, prompt, neg_prompt, seed)

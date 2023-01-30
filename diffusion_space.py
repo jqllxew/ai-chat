@@ -5,15 +5,20 @@ import torch
 
 from fanyi import youdao
 from aiimage.diffusion_local import prefix_prompt, inference
+from config import image as image_conf, display
+
+model_id = display(image_conf['diffusion']['local']['model-id'])
 
 
 def _inference(_prompt, _guidance, _steps, _width, _height, _seed, _image, _strength, _neg_prompt, _auto_prefix):
+    if model_id is None:
+        return None, "Error 你还未配置本地模型"
     pattern = '[\u4e00-\u9fa5]+'
     if re.search(pattern, _prompt):
-        print(f"提示 {_prompt}")
+        print(f"提示：{_prompt}")
         _prompt = youdao.chs2en(_prompt)
     if re.search(pattern, _neg_prompt):
-        print(f"负提示 {_neg_prompt}")
+        print(f"负提示：{_neg_prompt}")
         _neg_prompt = youdao.chs2en(_neg_prompt)
     return inference(prompt=_prompt,
                      guidance=_guidance,
@@ -41,7 +46,7 @@ if __name__ == "__main__":
             f"""
                 <div class="main-div">
                   <div>
-                    <h1>Basil Mix</h1>
+                    <h1>{ model_id if model_id is not None else "未配置本地模型" }</h1>
                   </div>
                   <p>
                    Demo for Stable Diffusion model.<br>

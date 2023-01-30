@@ -63,6 +63,7 @@ class OpenAI(ChatAI):
             reply_format += f"generate error because {image_res.generate_err}"
         return reply_format
 
+    # openai的图片生成
     # def create_img(self, query):
     #     try:
     #         print("[OPEN_AI] image_query={}".format(query))
