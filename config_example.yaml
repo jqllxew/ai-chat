@@ -39,6 +39,8 @@ image:
       # 从抱脸下载之后的模型在 user/.cache/huggingface/diffusers 你可以移动到项目目录下，这里改为本地路径 ./xxx
       model-id: CompVis/stable-diffusion-v1-4
 #      model-id: ./CompVis-stable-diffusion-v1-4/
+#      model-id: nuigurumi/basil_mix
+#      model-id: hakurei/waifu-diffusion
       # 是否支持图片参数
       i2i-support: true
       # 图片最大宽度 px
