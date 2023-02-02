@@ -39,7 +39,7 @@ class ApiImage(ABC):
         self.n_iter = 1  # 生成迭代次数
         self.steps = display(api_conf['steps'])  # 生成步数
         self.cfg_scale = display(api_conf['cfg-scale'])  # 引导规模
-        self.restore_faces = display(api_conf['restore_faces'])  # 面部修复
+        self.restore_faces = display(api_conf['restore-faces'])  # 面部修复
         self.tiling = False  # 是否对图像进行平铺
         self.eta = 0  # 步长
         self.s_churn = 0  # 样式改变
