@@ -62,6 +62,8 @@ class ApiImage(ABC):
         if res.status_code != 200:
             return None, str(res.content)
         ret = json.loads(res.content)
+        if ret.get('nsfw_res'):
+            return None, "抱歉~生成失败(nsfw尺度过大),绘制请适当描述衣着情况,参考dress或skirt或maid或添加sfw强调词"
         img_data = base64.b64decode(ret['images'][0])
         img = Image.open(BytesIO(img_data))
         return img, None
