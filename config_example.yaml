@@ -68,6 +68,17 @@ image:
       steps: 28
       # 面部修复
       restore-faces: true
+      # extensions 扩展参数,注意顺序不要更改
+      script-args:
+        - 0
+        - 0.9  # 美学优化权重
+        - 10 # 美学优化步数
+        - 0.0001 # 美学优化学习率
+        - false # 球面线性插值
+        - aivazovsky # 美学embedding 模型，不设置则不会启动美学优化
+        - # 美学描述
+        - 0.1 # 球面线性角度
+        - false # 美学描述为负提示
 
 # 对象存储
 cos:

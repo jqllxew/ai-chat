@@ -46,6 +46,8 @@ class ApiImage(ABC):
         self.s_tmax = 0  # 样式温度范围
         self.s_tmin = 0
         self.s_noise = 1  # 样式噪声
+        # extensions 扩展参数
+        self.script_args = api_conf['script-args'] if display(api_conf['script-args']) is not None else []
 
     def send_api(self) -> (Image, str):
         """
@@ -57,12 +59,12 @@ class ApiImage(ABC):
             api_url = url_img2img
         else:
             return None, "diffusion_api unknown implement"
-        print(f"prompt: {self.prompt}\nneg_prompt: {self.negative_prompt}")
+        print(f"prompt: {self.prompt}\nneg_prompt: {self.negative_prompt}\nscript_args: {self.script_args}")
         res = requests.post(api_url, json=self.__dict__)
         if res.status_code != 200:
             return None, str(res.content)
         ret = json.loads(res.content)
-        if ret.get('nsfw_res'):
+        if ret.get('nsfw_res') and ret['nsfw_res'][0]:
             return None, "抱歉~生成失败(nsfw尺度过大),绘制请适当描述衣着情况,参考dress或skirt或maid或添加sfw强调词"
         img_data = base64.b64decode(ret['images'][0])
         img = Image.open(BytesIO(img_data))
