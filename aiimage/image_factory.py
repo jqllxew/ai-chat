@@ -34,8 +34,8 @@ class ImageQuery(object):
         self.neg_prompt = ""
         if len(prompts) == 2:
             self.neg_prompt = prompts[1]
-        self.width = 512
-        self.height = 512
+        self.width = 576
+        self.height = 576
         if len(width_height) > 0:
             self.width = int(width_height[0][0])
             self.height = int(width_height[0][1])
@@ -81,6 +81,9 @@ def _generate_by_image_query(image_query: ImageQuery):
     image_query.generate_err = err
 
 
+separator_pattern = "\\s*([,，\\?\\/!:;-])\\s*"
+
+
 def generate_by_query(uid, query, from_type) -> ImageQuery:
     image_query = ImageQuery(query, from_type)  # 提取参数
     try:
@@ -89,8 +92,9 @@ def generate_by_query(uid, query, from_type) -> ImageQuery:
             buffer = BytesIO()
             image_query.generate_image.save(buffer, format="png")
             binary_data = buffer.getvalue()
+            prompt = re.sub(separator_pattern, '_', image_query.prompt)
             image_query.generate_image_path = tx_cos.upload(
-                f"{uid}/{str(int(time.time()))}_{image_query.seed}.png",
+                f"{uid}/{image_query.width}x{image_query.height}/{prompt.replace(' ','-')}_{image_query.seed}.png",
                 binary_data)
             print(f"[image]generate path {image_query.generate_image_path}")
     except Exception as e:
