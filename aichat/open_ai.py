@@ -11,7 +11,7 @@ class OpenAI(ChatAI):
         self.max_req_length = max_req_length
         self.max_resp_tokens = max_resp_tokens
 
-    def reply_text(self, uid: int, query: str):
+    def reply_text(self, uid: str, query: str):
         if uid is not None:
             if user_contexts.get(uid) is None:
                 user_contexts[uid] = deque()
@@ -47,7 +47,7 @@ class OpenAI(ChatAI):
         print(f"[OPEN_AI] reply={res_content}")
         return res_content
 
-    def reply_image(self, uid: int, query: str, from_type: str):
+    def reply_image(self, uid: str, query: str, from_type: str):
         reply_format = "提示词：{}\n负提示：{}\n随机数：{}\n耗时秒：{:.3f}\n宽高：{}\n"
         image_res = image_factory.generate_by_query(uid, query, from_type)
         reply_format = reply_format.format(
@@ -57,6 +57,8 @@ class OpenAI(ChatAI):
         if image_res.generate_err is None:
             if from_type == 'qq':
                 reply_format += f"[CQ:image,file={image_res.generate_image_path}]"
+            elif from_type == 'wx':
+                reply_format += f"[image={image_res.generate_image_path}]"
             else:
                 reply_format += image_res.generate_image_path
         else:

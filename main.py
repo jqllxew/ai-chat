@@ -8,10 +8,12 @@ if not os.path.exists('config.yaml'):
 from flask import Flask
 from route.qq import qq_api
 from route.test import test_api
+from route.wx import wx_api
 
 server = Flask(__name__)
 server.register_blueprint(qq_api)
 server.register_blueprint(test_api)
+server.register_blueprint(wx_api)
 
 
 @server.route('/', methods=['GET'])

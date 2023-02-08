@@ -8,7 +8,7 @@ from aichat.open_ai import OpenAI
 chat_models: dict[str, ChatAI] = {}
 
 
-def chat(uid: int, query: str, from_type: str):
+def chat(uid: str, query: str, from_type: str):
     query = query.strip()
     cmd_res = command(query, uid)
     if cmd_res is not None:

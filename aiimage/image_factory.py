@@ -1,3 +1,4 @@
+import base64
 import random
 import re
 import time
@@ -12,6 +13,7 @@ from config import image as image_conf, display
 
 diffusion_conf = image_conf['diffusion']
 qq_image_pattern = "\\[CQ:image,.*url=(.+?)]"  # qq图片
+wx_image_pattern = "\\[base64=(.+?)]"  # wx图片
 seed_pattern = "seed=(\\d+)"  # 随机数
 width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
 ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
@@ -20,9 +22,13 @@ ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
 class ImageQuery(object):
     def __init__(self, query: str, from_type: str):
         img_url = None
+        img_base64 = None
         if from_type == 'qq':
             img_url = re.findall(qq_image_pattern, query)
             query = re.sub(qq_image_pattern, '', query)
+        elif from_type == 'wx':
+            img_base64 = re.findall(wx_image_pattern, query)
+            query = re.sub(wx_image_pattern, '', query)
         seed = re.findall(seed_pattern, query)
         query = re.sub(seed_pattern, '', query)
         width_height = re.findall(width_height_pattern, query)
@@ -44,6 +50,9 @@ class ImageQuery(object):
         if img_url is not None and len(img_url) > 0:
             response = requests.get(img_url[0])
             self.image = Image.open(BytesIO(response.content))
+        if img_base64 is not None and len(img_base64) > 0:
+            base64_data = base64.b64decode(img_base64[0])
+            self.image = Image.open(BytesIO(base64_data))
         self.generate_image = None
         self.generate_err = None
         self.generate_image_path = None
@@ -92,9 +101,9 @@ def generate_by_query(uid, query, from_type) -> ImageQuery:
             buffer = BytesIO()
             image_query.generate_image.save(buffer, format="png")
             binary_data = buffer.getvalue()
-            prompt = re.sub(separator_pattern, '_', image_query.prompt)
+            # prompt = re.sub(separator_pattern, '_', image_query.prompt)
             image_query.generate_image_path = tx_cos.upload(
-                f"{uid}/{image_query.width}x{image_query.height}/{prompt.replace(' ','-')}_{image_query.seed}.png",
+                f"{uid}/{image_query.width}x{image_query.height}/{str(int(time.time()))}_{image_query.seed}.png",
                 binary_data)
             print(f"[image]generate path {image_query.generate_image_path}")
     except Exception as e:

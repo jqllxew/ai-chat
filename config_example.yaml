@@ -21,6 +21,9 @@ qq:
   uid:
   # 昵称
   nickname:
+wx:
+  # 昵称
+  nickname:
 
 image:
   diffusion:
