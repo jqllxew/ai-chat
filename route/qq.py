@@ -11,7 +11,7 @@ at_qq = f"[CQ:at,qq={qq_conf['uid']}]"
 at_nickname = f"@{qq_conf['nickname']}"
 
 
-@qq_api.route('/', methods=['post'])
+@qq_api.route('/', methods=['POST'])
 def receive():
     req_json = request.get_json()
     if req_json.get('message_type') == 'private':         # 私聊信息

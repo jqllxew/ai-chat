@@ -48,7 +48,7 @@ Try again with a different prompt and/or seed.
 ```
 site-packages/diffusers/pipelines/stable_diffusion/safety_checker.py
 ```
-#### 如下两个方法中
+#### 如下方法中
 ```
 @torch.no_grad()
 def forward(self, clip_input, images):
@@ -56,14 +56,6 @@ def forward(self, clip_input, images):
 # has_nsfw_concepts = [len(res["bad_concepts"]) > 0 for res in result] # 设置为空数组
 has_nsfw_concepts = []
 ...
-```
-```
-@torch.no_grad()
-def forward_onnx(self, clip_input: torch.FloatTensor, images: torch.FloatTensor):
-...
-# images[has_nsfw_concepts] = 0.0  # black image 注释掉这里
-
-return images, has_nsfw_concepts
 ```
 # 功能效果展示
 ![](assets/chat.jpg)![](assets/txt2img.jpg)![](assets/img2img.jpg)

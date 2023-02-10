@@ -7,7 +7,7 @@ wx_api = Blueprint(name="wx_api", import_name=__name__, url_prefix='/wx')
 at_nickname = f"@{wx_conf['nickname']}"
 
 
-@wx_api.route('/', methods=['post'])
+@wx_api.route('/', methods=['POST'])
 def receive():
     req_json = request.get_json()
     uid = req_json['payload']['id']
