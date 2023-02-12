@@ -1,5 +1,3 @@
-
-
 # 项目结构与说明以及目前实现
 ```
 aichat/ #对话ai调用     openai
@@ -12,7 +10,12 @@ config_example.yaml #配置文件示例 需要改成config.yaml运行
 main.py
 ```
 
-#### 接入qq需使用 gocqhttp 配置到启动端口，参考：[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)
+# 功能效果展示
+![](assets/chat.jpg)![](assets/txt2img.jpg)![](assets/img2img.jpg)
+
+# 接入聊天
+- qq需使用 gocqhttp 配置到启动端口，参考：[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)
+- 微信请参考 [simple-wechaty](https://github.com/jqllxew/simple-wechaty)
 
 # 依赖安装
 #### pytorch 自己具体的环境请参考：[Pytorch](https://pytorch.org/get-started/locally/)
@@ -31,12 +34,11 @@ pip3 install -r requirements.txt --proxy=xx
 [2.5D风nuigurumi/basil_mix](https://huggingface.co/nuigurumi/basil_mix/tree/main)
 
 #### 2，调用stable-diffusion-webui的接口
-前置条件: 已经搭建了sd-webui，不会搭建可以参考我的另一个项目[传送门](https://github.com/jqllxew/stable-diffusion-webui) \
-搭建完毕之后，注意启动webui.py时应加入 --api参数，不然不会提供接口
-```bash
-python webui.py --api
-```
-之后回到这个项目，在配置文件config.yaml中注释掉local段落，会自动选择api实现方式，具体请参考配置文件示例config_example.yaml
+前置条件: 搭建sd-webui
+- 可以参考我的另一个项目[传送门](https://github.com/jqllxew/stable-diffusion-webui)
+- 也可以通过[colab方式](https://github.com/jqllxew/ai-chat/blob/master/nb/stable_diifusion_webui_AUTOMATIC1111_jqllxew.ipynb)
+
+在配置文件config.yaml中注释掉local段落，会自动选择api实现方式，具体请参考配置文件示例config_example.yaml
 
 # 关于解决 NSFW 问题
 #### 使用diffusers库的 Pipeline对象调用模型生成通常会有这样的警告
@@ -57,5 +59,3 @@ def forward(self, clip_input, images):
 has_nsfw_concepts = []
 ...
 ```
-# 功能效果展示
-![](assets/chat.jpg)![](assets/txt2img.jpg)![](assets/img2img.jpg)
