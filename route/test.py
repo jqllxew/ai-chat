@@ -1,32 +1,23 @@
 import json
 from collections import deque
+
 import flask
 from flask import request, Blueprint
-import config
-from aichat.chat import user_contexts
-from aichat.chat_factory import chat
-from aichat.open_ai import OpenAI
+
+import aichat
+from aichat import user_contexts
 
 test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 
 
-# 测试接口
 @test_api.route('/chat', methods=['POST'])
 def chat_api():
-    req_data = request.get_data()
-    if req_data is None or req_data == "" or req_data == {}:
-        res = {'code': 1, 'msg': '请求内容不能为空'}
-        return json.dumps(res, ensure_ascii=False)
-    data = json.loads(req_data)
-    print(data)
+    data = request.get_json()
     try:
-        msg = chat('test0', data['msg'], 'test')
+        res = {'code': 0, 'data': aichat.chat('test01', data['msg'], 'test')}
     except Exception as error:
         res = {'code': 1, 'msg': '请求异常: ' + str(error)}
-        return json.dumps(res, ensure_ascii=False)
-    else:
-        res = {'code': 0, 'data': msg}
-        return json.dumps(res, ensure_ascii=False)
+    return json.dumps(res, ensure_ascii=False)
 
 
 @test_api.route('/ctx', methods=['GET'])
@@ -52,7 +43,9 @@ def ctx_set(uid):
 @test_api.route('/stream', methods=['POST'])
 def stream():
     """
-    fetch('/test/stream', {method: 'POST'})
+    fetch('/test/stream', {method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({q: '你是谁？'})})
     .then(x => x.body.pipeThrough(new TextDecoderStream()).getReader())
     .then(async reader => {
         console.log(reader);
@@ -64,9 +57,14 @@ def stream():
     })
     :return:
     """
-    ai = OpenAI(api_key=config.chat['openai']['api-key'],
-                model_id="text-davinci-003",
-                max_req_length=1024,
-                max_resp_tokens=512)
-    iterator = ai.reply_stream("test", "你叫什么名字？")
-    return flask.make_response(iterator)
+    q = request.get_json()
+    g = aichat.u_model("test01").reply_stream(q.get("q"))
+    return flask.make_response(g)
+
+
+@test_api.route('/db', methods=['GET'])
+def ds():
+    from mongo import db
+    data = db.chat.find(request.args)
+    return json.dumps(data, ensure_ascii=False)
+

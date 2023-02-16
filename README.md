@@ -1,3 +1,4 @@
+## rebase from github public
 # 项目结构与说明以及目前实现
 ```
 aichat/ #对话ai调用     openai
