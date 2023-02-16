@@ -3,9 +3,7 @@ from collections import deque
 import flask
 from flask import request, Blueprint
 import config
-from aichat.chat import user_contexts
-from aichat.chat_factory import chat
-from aichat.open_ai import OpenAI
+from aichat import user_contexts, chat, OpenAI
 
 test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 

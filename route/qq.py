@@ -1,7 +1,7 @@
 import requests
 from flask import request, Blueprint
 
-from aichat import chat_factory
+import aichat
 from config import qq as qq_conf
 
 qq_api = Blueprint("qq_api", __name__)
@@ -18,7 +18,7 @@ def receive():
         uid = req_json.get('sender').get('user_id')
         message = req_json.get('raw_message')
         print(f"[qq]私聊：{uid}\n{message}")
-        msg_text = chat_factory.chat(uid, message, 'qq')  # 将消息转发给AI处理
+        msg_text = aichat.chat(uid, message, 'qq')  # 将消息转发给AI处理
         send_private(uid, msg_text)
     elif req_json.get('message_type') == 'group':         # 群消息
         gid = req_json.get('group_id')                    # 群号
@@ -28,7 +28,7 @@ def receive():
         if at_qq in message or at_nickname in message:    # 被@时才回答
             message = message.replace(at_qq, "", 1)
             message = message.replace(at_nickname, "", 1)
-            msg_text = chat_factory.chat(uid, message, 'qq')
+            msg_text = aichat.chat(uid, message, 'qq')
             msg_text = f"[CQ:at,qq={uid}]\n" + msg_text
             send_group(gid, msg_text)
     if req_json.get('post_type') == 'request':

@@ -2,8 +2,8 @@
 from collections import deque
 
 from config import chat as chat_conf, display
-from aichat.chat import user_model_id, user_contexts, ChatAI
-from aichat.open_ai import OpenAI
+from .chat import user_model_id, user_contexts, ChatAI
+from .open_ai import OpenAI
 
 chat_models: dict[str, ChatAI] = {}
 
