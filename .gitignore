@@ -4,3 +4,5 @@ models
 venv
 __pycache__
 /config.yaml
+/build
+/dist

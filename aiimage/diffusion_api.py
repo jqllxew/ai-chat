@@ -5,7 +5,6 @@ from io import BytesIO
 
 import requests
 from PIL import Image
-from gradio.processing_utils import encode_pil_to_base64
 
 from config import image as image_conf, display
 from abc import ABC
@@ -88,7 +87,7 @@ class ApiImg2Img(ApiImage):
         super().__init__(width=width, height=height, denoising_strength=0.75,
                          prompt=prompt, neg_prompt=neg_prompt, seed=seed)
         # 初始化生成图像的输入图像
-        self.init_images = [encode_pil_to_base64(img)]
+        self.init_images = [Image.fromarray(img).tobytes().decode('utf-8')]
         self.resize_mode = 0  # 图像大小是否在生成过程中改变
         self.mask = None  # 生成图像中应保留的区域
         self.mask_blur = 4

@@ -5,7 +5,6 @@ import time
 from io import BytesIO
 import requests
 from PIL import Image
-from aiimage import diffusion_local
 from aiimage import diffusion_api
 from cos import tx_cos
 from fanyi import youdao
@@ -61,7 +60,17 @@ class ImageQuery(object):
 
 def _generate_by_image_query(image_query: ImageQuery):
     now = time.time()
-    if display(diffusion_conf['local']) is not None:
+    if display(diffusion_conf['api']) is not None:
+        image, err = diffusion_api.inference(
+            prompt=image_query.prompt,
+            neg_prompt=image_query.neg_prompt,
+            width=image_query.width,
+            height=image_query.height,
+            seed=image_query.seed,
+            img=image_query.image
+        )
+    elif display(diffusion_conf['local']) is not None:
+        import diffusion_local
         image, err = diffusion_local.inference(
             prompt=image_query.prompt,
             guidance=diffusion_conf['local']['guidance'],
@@ -72,15 +81,6 @@ def _generate_by_image_query(image_query: ImageQuery):
             img=image_query.image,
             neg_prompt=image_query.neg_prompt,
             auto_prefix=True
-        )
-    elif display(diffusion_conf['api']) is not None:
-        image, err = diffusion_api.inference(
-            prompt=image_query.prompt,
-            neg_prompt=image_query.neg_prompt,
-            width=image_query.width,
-            height=image_query.height,
-            seed=image_query.seed,
-            img=image_query.image
         )
     else:
         image = None
