@@ -1,3 +1,4 @@
+server.port: 7666
 
 chat:
   openai:
@@ -38,22 +39,6 @@ image:
       hermaphrodite,out of frame,extra limbs,missing arms,missing legs,poorly drawn hands,poorty drawn face,mutation,poorly drawn,
       long body,cloned face,mutated hands,bad hands,bad feet,long neck,missing limb,malformed limbs,malformed hands,fused fingers,
       too many fingers,extra fingers,missing fingers,extra digit,fewer digits,mutated hands and fingers,lowres,text,error,cropped,jpeg
-    local: # 如果想要用api实现就注释掉local这一段
-      # 从抱脸下载之后的模型在 user/.cache/huggingface/diffusers 你可以移动到项目目录下，这里改为本地路径 ./xxx
-      model-id: CompVis/stable-diffusion-v1-4
-#      model-id: ./CompVis-stable-diffusion-v1-4/
-#      model-id: nuigurumi/basil_mix
-#      model-id: hakurei/waifu-diffusion
-      # 是否支持图片参数
-      i2i-support: true
-      # 图片最大宽度 px
-      image-max-width: 824
-      # 图片最大高度 px
-      image-max-height: 824
-      # 引导规模
-      guidance: 7.5
-      # 步数
-      steps: 28
     api:
       # 文本->图像地址
       url-txt2img: http://127.0.0.1:7860/sdapi/v1/txt2img
@@ -82,7 +67,22 @@ image:
         - # 美学描述
         - 0.1 # 球面线性角度
         - false # 美学描述为负提示
-
+    local: # 如果使用release下载的可执行文件运行则不支持
+      # 从抱脸下载之后的模型在 user/.cache/huggingface/diffusers 你可以移动到项目目录下，这里改为本地路径 ./xxx
+      model-id: CompVis/stable-diffusion-v1-4
+      #      model-id: ./CompVis-stable-diffusion-v1-4/
+      #      model-id: nuigurumi/basil_mix
+      #      model-id: hakurei/waifu-diffusion
+      # 是否支持图片参数
+      i2i-support: true
+      # 图片最大宽度 px
+      image-max-width: 824
+      # 图片最大高度 px
+      image-max-height: 824
+      # 引导规模
+      guidance: 7.5
+      # 步数
+      steps: 28
 # 对象存储
 cos:
   # 腾讯云cos 参考 https://console.cloud.tencent.com/cos

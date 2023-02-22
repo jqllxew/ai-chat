@@ -1,4 +1,5 @@
 import yaml
+import os
 
 
 class ConfDict(dict):
@@ -35,9 +36,13 @@ def display(_any):
         return _any
 
 
-with open("config.yaml", "r", encoding="utf-8") as file:
+config_path = "config.yaml"
+if not os.path.exists(config_path):
+    config_path = "config_example.yaml"
+with open(config_path, "r", encoding="utf-8") as file:
     yaml_string = file.read()
 _data = yaml.load(yaml_string, Loader=yaml.FullLoader)
+port = _data.get('server.port')
 chat = ConfDict(_data.get('chat'))
 qq = ConfDict(_data.get('qq'))
 wx = ConfDict(_data.get('wx'))
