@@ -49,6 +49,7 @@ wx = ConfDict(_data.get('wx'))
 image = ConfDict(_data.get('image'))
 cos = ConfDict(_data.get('cos'))
 fanyi = ConfDict(_data.get('fanyi'))
+wx_mini_program = ConfDict(_data.get('wx-mini-program'))
 
 if __name__ == "__main__":
     print(chat)

@@ -97,3 +97,7 @@ fanyi:
   youdao:
     app-key:
     app-secret:
+
+wx-mini-program:
+  appid:
+  secret:

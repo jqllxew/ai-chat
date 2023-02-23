@@ -18,7 +18,8 @@ class JsonCollection:
     def wrap(func):
         def wrapped(*args, **kwargs):
             _result = func(*args, **kwargs)
-            # 调用原函数并使用 json_util 进行序列化
+            if _result is None:
+                return _result
             return json_util.dumps(_result)
         return wrapped
 
