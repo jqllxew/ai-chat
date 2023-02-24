@@ -1,4 +1,3 @@
-## rebase from github public
 # 项目结构与说明以及目前实现
 ```
 aichat/ #对话ai调用     openai
@@ -12,7 +11,7 @@ main.py
 ```
 
 # 功能效果展示
-![](assets/chat.jpg)![](assets/txt2img.jpg)![](assets/img2img.jpg)
+<img src="assets/screenshot-chat.jpg" width="280"><img src="assets/screenshot-txt2img.jpg" width="280"><img src="assets/screenshot-img2img.jpg" width="270">
 
 # 接入聊天
 - qq需使用 gocqhttp 配置到启动端口，参考：[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)
