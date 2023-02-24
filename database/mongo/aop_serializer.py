@@ -24,7 +24,7 @@ class JsonCollection:
         return wrapped
 
 
-class Database:
+class JsonDatabase:
     def __init__(self, database):
         self.database = database
 

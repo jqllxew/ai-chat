@@ -26,7 +26,7 @@ client = __create()
 
 def upload(key, binary_data):
     if client is None:
-        print("[COS] err client is None")
+        print("[COS] cos客户端未被创建，图像将无法展示..")
         return ""
     response = client.put_object(
         Bucket=bucket,

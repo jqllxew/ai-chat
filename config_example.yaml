@@ -98,6 +98,7 @@ fanyi:
     app-key:
     app-secret:
 
-wx-mini-program:
-  appid:
-  secret:
+database:
+  mongo:
+    uri: mongodb://root:123456@127.0.0.1:27017/
+    db: aichat

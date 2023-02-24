@@ -4,6 +4,8 @@ import os
 
 class ConfDict(dict):
     def __init__(self, data: dict, miss=False):
+        if data is None:
+            data = {}
         super().__init__(data)
         self.data = data
         self.miss = miss
@@ -26,7 +28,6 @@ class ConfDict(dict):
 
 def display(_any):
     """
-    用display判断配置文件参数，相当于把决定权留到最后
     :param _any: 任意参数
     :return:
     """
@@ -49,7 +50,7 @@ wx = ConfDict(_data.get('wx'))
 image = ConfDict(_data.get('image'))
 cos = ConfDict(_data.get('cos'))
 fanyi = ConfDict(_data.get('fanyi'))
-wx_mini_program = ConfDict(_data.get('wx-mini-program'))
+database = ConfDict(_data.get('database'))
 
 if __name__ == "__main__":
     print(chat)

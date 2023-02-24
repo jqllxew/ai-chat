@@ -53,7 +53,7 @@ class ChatAI(ABC):
             prompt = query
         try:
             if callable(before):
-                before(prompt)
+                before(self.uid, query, prompt)
             res = self.generate(prompt, stream)
             if stream:
                 res_text = ""
@@ -66,12 +66,12 @@ class ChatAI(ABC):
             if self.need_ctx:
                 user_contexts[self.uid].append(res_text)
             if callable(after):
-                after(res_text)
+                after(self.uid, res_text)
             if not stream:
                 yield res_text
         except Exception as e:
             if callable(error):
-                yield error(e)
+                yield error(self.uid, e)
             else:
                 yield e
 

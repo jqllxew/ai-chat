@@ -63,8 +63,8 @@ def stream():
 
 
 @test_api.route('/db', methods=['GET'])
-def ds():
-    from mongo import db
+def db():
+    from database.mongo import db
     data = db.chat.find(request.args)
     return json.dumps(data, ensure_ascii=False)
 

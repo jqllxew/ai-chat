@@ -18,6 +18,8 @@ def u_model(uid, need_ctx=True):
                 max_resp_tokens=openai_conf['max-resp-tokens'],
                 need_ctx=need_ctx)
             user_models[uid] = m
+        else:
+            m = ChatAI(uid, need_ctx)
     return m
 
 
