@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 if not os.path.exists('config.yaml') \
@@ -6,10 +7,17 @@ if not os.path.exists('config.yaml') \
     sys.exit()
 from config import server as server_conf, display
 from route import server
-from waitress import serve
 
 if __name__ == '__main__':
-    port = display(server_conf['port'])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', default=None, help='端口')
+    parser.add_argument('--waitress', action='store_true', help='waitress启动')
+    opts = parser.parse_args()
+    port = opts.port or display(server_conf['port'])
     if port is None:
         port = 7666
-    serve(app=server, port=port, host='0.0.0.0')
+    if opts.waitress:
+        from waitress import serve
+        serve(app=server, port=port, host='0.0.0.0')
+    else:
+        server.run(port=port, host='0.0.0.0')
