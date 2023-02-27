@@ -77,7 +77,7 @@ class ImageAI(ReplyAI, ABC):
         except Exception as e:
             return None, str(e)
 
-    def reply(self, query: str, _before=None, _after=None, _error=None):
+    def reply(self, query: str, _before=..., _after=..., _error=...):
         """
         :param _before:
         :param _after:

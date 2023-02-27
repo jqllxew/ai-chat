@@ -7,10 +7,9 @@ from ai import ReplyAI
 
 class ChatAI(ReplyAI, ABC):
 
-    def __init__(self, need_ctx=True, image_model_id=None, **kwargs):
+    def __init__(self, need_ctx=True, **kwargs):
         super().__init__(**kwargs)
         self.need_ctx = need_ctx
-        self.image_model_id = image_model_id
         self.ctx = deque()
 
     def get_prompt(self, query="", sep="\r\n") -> str:
@@ -75,7 +74,7 @@ class ChatAI(ReplyAI, ABC):
     def reply_stream(self, query: str):
         return (x for x in self.reply_text(query, True))
 
-    def instruction(self, query, _help=None):
+    def instruction(self, query, _help=...):
         if query[0] == "#":
             if query == "#help":
                 if callable(_help):

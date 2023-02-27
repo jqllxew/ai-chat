@@ -99,7 +99,7 @@ class Diffusers(ImageAI):
             return None, err
         return self.upload(img)
 
-    def reply(self, query: str, _before=None, _after=None, _error=None):
+    def reply(self, query: str, **kwargs):
         return super().reply(
             query=query,
             _before=lambda q, p: f"[diffusers]{self.uid}-query:{q}\nprompt:{p}",
