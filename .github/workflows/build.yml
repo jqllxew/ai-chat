@@ -26,7 +26,7 @@ jobs:
       run: |
         pip install pyinstaller
         pyinstaller -F main.py
-        mv ./dist/main.exe ./dist/windows_amd64.exe
+        mv ./dist/main.exe ./dist/aichat_win_amd64.exe
     - name: Add config_example.yaml to dist
       run: cp config_example.yaml ./dist/
     - name: Upload artifacts windows_amd64

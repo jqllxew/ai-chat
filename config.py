@@ -43,19 +43,11 @@ if not os.path.exists(config_path):
 with open(config_path, "r", encoding="utf-8") as file:
     yaml_string = file.read()
 _data = yaml.load(yaml_string, Loader=yaml.FullLoader)
-port = _data.get('server.port')
+server = ConfDict(_data.get('server'))
 chat = ConfDict(_data.get('chat'))
 qq = ConfDict(_data.get('qq'))
 wx = ConfDict(_data.get('wx'))
 image = ConfDict(_data.get('image'))
 cos = ConfDict(_data.get('cos'))
 fanyi = ConfDict(_data.get('fanyi'))
-database = ConfDict(_data.get('database'))
-
-if __name__ == "__main__":
-    print(chat)
-    print(qq)
-    print(wx)
-    print(image)
-    print(cos)
-    print(fanyi)
+journal = ConfDict(_data.get('journal'))

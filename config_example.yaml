@@ -1,4 +1,6 @@
-server.port: 7666
+server:
+  port: 7666
+  log-level: INFO
 
 chat:
   openai:
@@ -27,64 +29,61 @@ wx:
   nickname:
 
 image:
+  # 提示词前缀
+  prefix-prompt: masterpiece,best quality,ultra detailed
+  # 默认负提示
+  default-neg-prompt: three arms,three hands,{lowres}, {{{{{{{{{{{blurry}}}}}}}}}}}, {{{{{{{{{bad hands}}}}}}}}},
+    {{{{{missing fingers}}}},(((missing hands))),((missing arms)),bad hands,{{{{{{{{{{{{{extra digit}}}}}}}}}}}}},
+    fewer digits,small hands,((three arms)),error, multiple limbs,bad feet,cropped,worst quality,low quality,jpeg artifacts,
+    bad anatomy,long nails,{{{{interlocked fingers}}}},((three hands)),milf,ugly,duplicate,morbid,mutilated,tranny,trans,
+    trannsexual,mutation,deformed,long neck,bad anatomy,bad proportions,extra arms,extra legs, disfigured,malformed,mutated,
+    hermaphrodite,out of frame,extra limbs,missing arms,missing legs,poorly drawn hands,poorty drawn face,mutation,poorly drawn,
+    long body,cloned face,mutated hands,bad hands,bad feet,long neck,missing limb,malformed limbs,malformed hands,fused fingers,
+    too many fingers,extra fingers,missing fingers,extra digit,fewer digits,mutated hands and fingers,lowres,text,error,cropped,jpeg
   diffusion:
-    # 提示词前缀
-    prefix-prompt: masterpiece,best quality,ultra detailed
-    # 默认负提示
-    default-neg-prompt: three arms,three hands,{lowres}, {{{{{{{{{{{blurry}}}}}}}}}}}, {{{{{{{{{bad hands}}}}}}}}},
-      {{{{{missing fingers}}}},(((missing hands))),((missing arms)),bad hands,{{{{{{{{{{{{{extra digit}}}}}}}}}}}}},
-      fewer digits,small hands,((three arms)),error, multiple limbs,bad feet,cropped,worst quality,low quality,jpeg artifacts,
-      bad anatomy,long nails,{{{{interlocked fingers}}}},((three hands)),milf,ugly,duplicate,morbid,mutilated,tranny,trans,
-      trannsexual,mutation,deformed,long neck,bad anatomy,bad proportions,extra arms,extra legs, disfigured,malformed,mutated,
-      hermaphrodite,out of frame,extra limbs,missing arms,missing legs,poorly drawn hands,poorty drawn face,mutation,poorly drawn,
-      long body,cloned face,mutated hands,bad hands,bad feet,long neck,missing limb,malformed limbs,malformed hands,fused fingers,
-      too many fingers,extra fingers,missing fingers,extra digit,fewer digits,mutated hands and fingers,lowres,text,error,cropped,jpeg
-    api:
-      # 文本->图像地址
-      url-txt2img: http://127.0.0.1:7860/sdapi/v1/txt2img
-      # 图像->图像地址
-      url-img2img: http://127.0.0.1:7860/sdapi/v1/img2img
-      # 图片最大宽度 px
-      image-max-width: 1280
-      # 图片最大高度 px
-      image-max-height: 1280
-      # 采样方法
-      sampler-index: Euler a
-      # 引导规模
-      cfg-scale: 7
-      # 生成步数
-      steps: 28
-      # 面部修复
-      restore-faces: true
-      # extensions 扩展参数,注意顺序不要更改
-      script-args:
-        - 0
-        - 0.9  # 美学优化权重
-        - 10 # 美学优化步数
-        - 0.0001 # 美学优化学习率
-        - false # 球面线性插值
-        - aivazovsky # 美学embedding 模型，不设置则不会启动美学优化
-        - # 美学描述
-        - 0.1 # 球面线性角度
-        - false # 美学描述为负提示
-    local: # 如果使用release下载的可执行文件运行则不支持
-      # 从抱脸下载之后的模型在 user/.cache/huggingface/diffusers 你可以移动到项目目录下，这里改为本地路径 ./xxx
-      model-id: CompVis/stable-diffusion-v1-4
-      #      model-id: ./CompVis-stable-diffusion-v1-4/
-      #      model-id: nuigurumi/basil_mix
-      #      model-id: hakurei/waifu-diffusion
-      # 是否支持图片参数
-      i2i-support: true
-      # 图片最大宽度 px
-      image-max-width: 824
-      # 图片最大高度 px
-      image-max-height: 824
-      # 引导规模
-      guidance: 7.5
-      # 步数
-      steps: 28
-# 对象存储
-cos:
+    # 地址
+    uri: http://127.0.0.1:7860
+    # 图片最大宽度 px
+    image-max-width: 1280
+    # 图片最大高度 px
+    image-max-height: 1280
+    # 采样方法
+    sampler-index: Euler a
+    # 引导规模
+    cfg-scale: 7
+    # 生成步数
+    steps: 22
+    # 面部修复
+    restore-faces: true
+    # extensions 扩展参数,注意顺序不要更改
+    script-args:
+      - 0
+      - 0.9  # 美学优化权重
+      - 10 # 美学优化步数
+      - 0.0001 # 美学优化学习率
+      - false # 球面线性插值
+      - aivazovsky # 美学embedding 模型，不设置则不会启动美学优化
+      - # 美学描述
+      - 0.1 # 球面线性角度
+      - false # 美学描述为负提示
+  diffusers: # 如果使用release下载的可执行文件运行则不支持
+    # 从抱脸下载之后的模型在 user/.cache/huggingface/diffusers 你可以移动到项目目录下，这里改为本地路径 ./xxx
+    model-id: CompVis/stable-diffusion-v1-4
+    #      model-id: ./CompVis-stable-diffusion-v1-4/
+    #      model-id: nuigurumi/basil_mix
+    #      model-id: hakurei/waifu-diffusion
+    # 是否支持图片参数
+    i2i-support: true
+    # 图片最大宽度 px
+    image-max-width: 824
+    # 图片最大高度 px
+    image-max-height: 824
+    # 引导规模
+    guidance: 7.5
+    # 步数
+    steps: 22
+
+cos: # 使用绘画功能必须配置否则收不到图像
   # 腾讯云cos 参考 https://console.cloud.tencent.com/cos
   tx:
     secret-id:
@@ -93,12 +92,11 @@ cos:
     bucket:
 
 fanyi:
-  # 有道智云 https://ai.youdao.com/console/
-  youdao:
+  youdao: # 有道智云 https://ai.youdao.com/console/
     app-key:
     app-secret:
 
-database:
+journal:
   mongo:
-    uri: mongodb://root:123456@127.0.0.1:27017/
-    db: aichat
+    uri:
+    db:

@@ -1,4 +1,5 @@
 import base64
+import io
 import json
 import random
 from io import BytesIO
@@ -6,22 +7,22 @@ from io import BytesIO
 import requests
 from PIL import Image
 
+from aiimage.image_ai import ImageAI, ImagePrompt
 from config import image as image_conf, display
 from abc import ABC
 
-diffusion_conf = image_conf['diffusion']
-prefix_prompt = display(diffusion_conf['prefix-prompt'])
-default_neg_prompt = display(diffusion_conf['default-neg-prompt'])
-api_conf = diffusion_conf['api']
-url_txt2img = display(api_conf['url-txt2img'])
-url_img2img = display(api_conf['url-img2img'])
-image_max_width = display(api_conf['image-max-width'])
-image_max_height = display(api_conf['image-max-height'])
+from logger import logger
+
+prefix_prompt = display(image_conf['prefix-prompt'])
+default_neg_prompt = display(image_conf['default-neg-prompt'])
+_conf = image_conf['diffusion']
+image_max_width = display(_conf['image-max-width'])
+image_max_height = display(_conf['image-max-height'])
 
 
 class ApiImage(ABC):
     def __init__(self, width=680, height=680, prompt="", neg_prompt="", seed=0,
-                 denoising_strength=.0, sampler_index="Euler a"):
+                 denoising_strength=.0, sampler_index="Euler a", uri=None, **kwargs):
         self.width = 680 if width == 0 else width  # 图片大小
         self.height = 680 if height == 0 else height
         self.denoising_strength = denoising_strength  # 降噪强度
@@ -36,9 +37,9 @@ class ApiImage(ABC):
         self.seed_resize_from_w = -1
         self.batch_size = 1  # 批处理大小
         self.n_iter = 1  # 生成迭代次数
-        self.steps = display(api_conf['steps'])  # 生成步数
-        self.cfg_scale = display(api_conf['cfg-scale'])  # 引导规模
-        self.restore_faces = display(api_conf['restore-faces'])  # 面部修复
+        self.steps = display(_conf['steps'])  # 生成步数
+        self.cfg_scale = display(_conf['cfg-scale'])  # 引导规模
+        self.restore_faces = display(_conf['restore-faces'])  # 面部修复
         self.tiling = False  # 是否对图像进行平铺
         self.eta = 0  # 步长
         self.s_churn = 0  # 样式改变
@@ -46,19 +47,23 @@ class ApiImage(ABC):
         self.s_tmin = 0
         self.s_noise = 1  # 样式噪声
         # extensions 扩展参数
-        self.script_args = api_conf['script-args'] if display(api_conf['script-args']) is not None else []
+        self.script_args = _conf['script-args'] if display(_conf['script-args']) is not None else []
+        self.uri = uri if uri else display(_conf['uri'])
 
     def send_api(self) -> (Image, str):
         """
         :return: image, str(err)
         """
+        if self.width > image_max_width or self.height > image_max_height:
+            return None, f"Error 抱歉,生成{self.width}x{self.height}图片" \
+                         f"已超过当前最大分辨率{image_max_width}x{image_max_height},请您调整参数"
         if isinstance(self, ApiTxt2Img):
-            api_url = url_txt2img
+            api_url = self.uri + '/sdapi/v1/txt2img'
         elif isinstance(self, ApiImg2Img):
-            api_url = url_img2img
+            api_url = self.uri + '/sdapi/v1/img2img'
         else:
             return None, "diffusion_api unknown implement"
-        print(f"prompt: {self.prompt}\nneg_prompt: {self.negative_prompt}\nscript_args: {self.script_args}")
+        logger.debug(f"prompt: {self.prompt}\nneg_prompt: {self.negative_prompt}\nscript_args: {self.script_args}")
         res = requests.post(api_url, json=self.__dict__)
         if res.status_code != 200:
             return None, str(res.content)
@@ -71,10 +76,8 @@ class ApiImage(ABC):
 
 
 class ApiTxt2Img(ApiImage):
-    def __init__(self, width: int, height: int, prompt: str,
-                 neg_prompt: str, seed: int):
-        super().__init__(width=width, height=height, prompt=prompt,
-                         neg_prompt=neg_prompt, seed=seed)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.enable_hr = False  # 是否使用高分辨率
         # 首次生成图像的大小。
         self.firstphase_width = 0
@@ -82,12 +85,12 @@ class ApiTxt2Img(ApiImage):
 
 
 class ApiImg2Img(ApiImage):
-    def __init__(self, width: int, height: int, prompt: str,
-                 neg_prompt: str, img: Image, seed: int):
-        super().__init__(width=width, height=height, denoising_strength=0.75,
-                         prompt=prompt, neg_prompt=neg_prompt, seed=seed)
+    def __init__(self, img: Image, **kwargs):
+        super().__init__(denoising_strength=0.75, **kwargs)
         # 初始化生成图像的输入图像
-        self.init_images = [Image.fromarray(img).tobytes().decode('utf-8')]
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        self.init_images = [base64.b64encode(buffered.getvalue()).decode()]
         self.resize_mode = 0  # 图像大小是否在生成过程中改变
         self.mask = None  # 生成图像中应保留的区域
         self.mask_blur = 4
@@ -99,12 +102,29 @@ class ApiImg2Img(ApiImage):
         self.include_init_images = False
 
 
-def inference(width, height, prompt, neg_prompt, seed, img=None) -> (Image, str):
-    if width > image_max_width or height > image_max_height:
-        return None, f"Error 抱歉,生成{width}x{height}图片已超过当前最大分辨率{image_max_width}x{image_max_height},请您调整参数"
-    api: ApiImage
-    if img is None:
-        api = ApiTxt2Img(width, height, prompt, neg_prompt, seed)
-    else:
-        api = ApiImg2Img(width, height, prompt, neg_prompt, img, seed)
-    return api.send_api()
+def inference(img=None, **kwargs) -> (Image, str):
+    try:
+        api: ApiImage
+        if img is None:
+            api = ApiTxt2Img(**kwargs)
+        else:
+            api = ApiImg2Img(img=img, **kwargs)
+        return api.send_api()
+    except Exception as e:
+        return None, str(e)
+
+
+class Diffusion(ImageAI):
+    def generate(self, ipt: ImagePrompt):
+        img, err = inference(uri=ipt.model_id, **ipt.__dict__)
+        if err:
+            return None, err
+        return self.upload(img)
+
+    def reply(self, query: str, _before=None, _after=None, _error=None):
+        return super().reply(
+            query=query,
+            _before=lambda q, p: f"[sd_api]{self.uid}-query:{q}\nprompt:{p}",
+            _after=lambda x: f"[sd_api]{self.uid}-reply:{x}",
+            _error=lambda x: f"[sd_api]{self.uid}-error:{x}"
+        )

@@ -5,7 +5,6 @@ import flask
 from flask import request, Blueprint
 
 import aichat
-from aichat import user_contexts
 
 test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 
@@ -18,14 +17,6 @@ def chat_api():
     except Exception as error:
         res = {'code': 1, 'msg': '请求异常: ' + str(error)}
     return json.dumps(res, ensure_ascii=False)
-
-
-@test_api.route('/ctx', methods=['GET'])
-def ctx():
-    data = {}
-    for k, v in user_contexts.items():
-        data[k] = list(v)
-    return json.dumps(data, ensure_ascii=False)
 
 
 @test_api.route('/ctx_set/<int:uid>', methods=['GET'])
@@ -64,7 +55,7 @@ def stream():
 
 @test_api.route('/db', methods=['GET'])
 def db():
-    from database.mongo import db
-    data = db.chat.find(request.args)
+    from journal.mongo import db
+    data = db.u_wx.find_one(**request.args)
     return json.dumps(data, ensure_ascii=False)
 

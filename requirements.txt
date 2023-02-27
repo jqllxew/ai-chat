@@ -84,3 +84,4 @@ xmltodict==0.13.0
 yarl==1.8.2
 zipp==3.11.0
 pymongo
+waitress

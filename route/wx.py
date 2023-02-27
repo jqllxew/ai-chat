@@ -2,6 +2,7 @@ from flask import request, Blueprint
 
 import aichat
 from config import wx as wx_conf
+from logger import logger
 
 wx_api = Blueprint(name="wx_api", import_name=__name__, url_prefix='/wx')
 at_nickname = f"@{wx_conf['nickname']}"
@@ -16,13 +17,13 @@ def receive():
     room = req_json.get('room')
     if room and room != 'undefined':
         if at_nickname in message:
-            print(f"[wx]群聊：{name}\n{message}")
+            logger.info(f"[wx]{name}-群聊:{message}")
             message = message.replace(at_nickname, "", 1)
             msg_text = aichat.chat(uid, message, 'wx')
             msg_text = f"@{name}\n" + msg_text
         else:
             msg_text = ""
     else:
-        print(f"[wx]私聊：{name}\n{message}")
+        logger.info(f"[wx]{name}-私聊:{message}")
         msg_text = aichat.chat(uid, message, 'wx')
     return msg_text

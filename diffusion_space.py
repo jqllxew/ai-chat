@@ -4,10 +4,11 @@ import gradio as gr
 import torch
 
 from fanyi import youdao
-from aiimage.diffusion_local import prefix_prompt, inference
+from aiimage.diffusers import prefix_prompt, inference
 from config import image as image_conf, display
+from logger import logger
 
-model_id = display(image_conf['diffusion']['local']['model-id'])
+model_id = display(image_conf['diffusers']['model-id'])
 
 
 def _inference(_prompt, _guidance, _steps, _width, _height, _seed, _image, _strength, _neg_prompt, _auto_prefix):
@@ -15,10 +16,10 @@ def _inference(_prompt, _guidance, _steps, _width, _height, _seed, _image, _stre
         return None, "Error 你还未配置本地模型"
     pattern = '[\u4e00-\u9fa5]+'
     if re.search(pattern, _prompt):
-        print(f"提示：{_prompt}")
+        logger.debug(f"提示：{_prompt}")
         _prompt = youdao.chs2en(_prompt)
     if re.search(pattern, _neg_prompt):
-        print(f"负提示：{_neg_prompt}")
+        logger.debug(f"负提示：{_neg_prompt}")
         _neg_prompt = youdao.chs2en(_neg_prompt)
     return inference(prompt=_prompt,
                      guidance=_guidance,
