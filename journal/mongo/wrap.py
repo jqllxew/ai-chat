@@ -17,7 +17,7 @@ class JsonCollection:
         def wrapped(*args, **kwargs):
             if '_id' in kwargs and isinstance(kwargs['_id'], str):
                 kwargs['_id'] = ObjectId(kwargs['_id'])
-            logger.info(f"[mongodb] {name}{args}{kwargs}")
+            logger.debug(f"[mongodb] {name}{args}{kwargs}")
             if name in ['find_one', 'find']:
                 try:
                     cursor = func(kwargs)

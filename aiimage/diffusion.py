@@ -124,7 +124,7 @@ class Diffusion(ImageAI):
     def reply(self, query: str, **kwargs):
         return super().reply(
             query=query,
-            _before=lambda q, p: f"[sd_api]{self.uid}-query:{q}\nprompt:{p}",
+            _before=lambda q, p: f"[sd_api]{self.uid}-prompt:{p}",
             _after=lambda x: f"[sd_api]{self.uid}-reply:{x}",
             _error=lambda x: f"[sd_api]{self.uid}-error:{x}"
         )

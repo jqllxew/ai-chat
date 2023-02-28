@@ -102,7 +102,7 @@ class Diffusers(ImageAI):
     def reply(self, query: str, **kwargs):
         return super().reply(
             query=query,
-            _before=lambda q, p: f"[diffusers]{self.uid}-query:{q}\nprompt:{p}",
+            _before=lambda q, p: f"[diffusers]{self.uid}-prompt:{p}",
             _after=lambda x: f"[diffusers]{self.uid}-reply:{x}",
             _error=lambda x: f"[diffusers]{self.uid}-error:{x}"
         )
