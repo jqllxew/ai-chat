@@ -15,17 +15,17 @@ class JsonCollection:
     @staticmethod
     def wrap(name, func):
         def wrapped(*args, **kwargs):
-            if '_id' in kwargs and isinstance(kwargs['_id'], str):
-                kwargs['_id'] = ObjectId(kwargs['_id'])
-            logger.debug(f"[mongodb] {name}{args}{kwargs}")
-            if name in ['find_one', 'find']:
-                try:
-                    cursor = func(kwargs)
-                    return json.loads(json_util.dumps(cursor))
-                except Exception as e:
-                    logger.error(f"[mongodb] err: {e}")
-            else:
-                return func(*args, **kwargs)
+            arg = args[0] if len(args) else None
+            try:
+                if isinstance(arg, dict) and '_id' in arg and isinstance(arg['_id'], str):
+                    arg['_id'] = ObjectId(arg['_id'])
+                logger.debug(f"[mongodb] {name}{args}")
+                res = func(*args, **kwargs)
+                if name in ['find', 'find_one']:
+                    return json.loads(json_util.dumps(res))
+                return res
+            except Exception as e:
+                logger.error(f"[mongodb] err: {e}")
         return wrapped
 
 

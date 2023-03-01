@@ -2,6 +2,7 @@ import time
 
 from abc import ABC
 from collections import deque
+from bson import ObjectId
 from logger import logger
 
 
@@ -36,6 +37,22 @@ class Journal(ABC):
             msg = f"uid:{self.uid},error: {e}"
         logger.warn(msg)
         return msg
+
+
+class MongoBase:
+    def __init__(self, _id, **kw):
+        self._id = _id
+
+    def __setattr__(self, key, val):
+        if isinstance(val, ObjectId):
+            self.__dict__[key] = str(val)
+        elif key == '_id' and isinstance(val, dict):
+            self.__dict__[key] = val.get('$oid')
+        else:
+            self.__dict__[key] = val
+
+    def todict(self):
+        return dict([(k, v) for k, v in self.__dict__.items() if v is not None])
 
 
 class JournalMongo(Journal):
