@@ -24,11 +24,13 @@ class ColoredFormatter(logging.Formatter):
 formatter = ColoredFormatter(
     fmt='[%(asctime)s]-[%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S')
+log_level = logging.getLevelName(server_conf['log-level']) \
+    if display(server_conf['log-level']) else logging.INFO
 handler = logging.StreamHandler()
+handler.level = log_level
 handler.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(handler)
-log_level = display(server_conf['log-level'])
-logger.setLevel(logging.getLevelName(log_level) if log_level else logging.INFO)
+logger.setLevel(log_level)
 
 __all__ = ["logger", "handler"]
