@@ -1,29 +1,37 @@
-
 from abc import ABC, abstractmethod
-from collections import deque
 import journal
 from ai import ReplyAI
 
 
 class ChatAI(ReplyAI, ABC):
 
-    def __init__(self, need_ctx=True, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, need_ctx=True, **kw):
+        super().__init__(**kw)
         self.need_ctx = need_ctx
-        self.ctx = deque()
+        self.ctx = list()
 
-    def get_prompt(self, query="", sep="\r\n") -> str:
-        """
-        :param query: 用户发来的文本消息
-        :param sep: 分隔符
-        :return: 上下文
-        """
-        if query:
-            self.ctx.append(query)
+    def join_ctx(self, sep="\r\n"):
         return sep.join(self.ctx)
 
+    def append_ctx(self, query=None, reply=None):
+        query and self.ctx.append(query)
+        reply and self.ctx.append(reply)
+
+    def get_prompt(self, query=""):
+        """
+        :param query: 用户发来的文本消息
+        :return: prompts
+        """
+        if self.need_ctx:
+            self.append_ctx(query)
+            return self.join_ctx()
+        return query
+
+    def get_prompt_len(self, prompt):
+        return len(prompt)
+
     @abstractmethod
-    def generate(self, prompt: str, stream=False):
+    def generate(self, prompt, stream=False):
         """
         :param prompt:
         :param stream:
@@ -43,11 +51,8 @@ class ChatAI(ReplyAI, ABC):
         ins = self.instruction(query, self.uid)
         if ins:
             yield ins
-        if self.need_ctx:
-            prompt = self.get_prompt(query)
-        else:
-            prompt = query
-        jl = journal.lifecycle(**self.__dict__,
+        prompt = self.get_prompt(query)
+        jl = journal.lifecycle(**self.__dict__, prompt_len=self.get_prompt_len(prompt),
                                _before=before, _after=after, _error=error)
         try:
             jl.before(query, prompt)
@@ -61,7 +66,7 @@ class ChatAI(ReplyAI, ABC):
                 res_text = res
             res_text = res_text.strip()
             if self.need_ctx:
-                self.ctx.append(res_text)
+                self.append_ctx(reply=res_text)
                 jl.after(res_text)
             if not stream:
                 yield res_text
@@ -86,22 +91,22 @@ class ChatAI(ReplyAI, ABC):
                        "\n[#del]删除会话记录上下文（可加入条数#del x，表示删除最近x条）"
             elif "#add" in query:
                 add_ctx = query.replace("#add", "", 1).strip()
-                self.ctx.append(add_ctx)
+                self.append_ctx(add_ctx)
                 return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
-                    .format(self.uid, len(self.ctx), len("\r\n".join(self.ctx)))
+                    .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
             elif query == "#ctx":
                 with open("./models/default_ctx.txt", 'r', encoding='utf-8') as f:
                     lines = f.readlines()
-                    for line in lines:
+                    for i, line in enumerate(lines):
                         line = line.replace("\n", "", -1)
-                        self.ctx.append(line)
+                        self.append_ctx(query=line) if i % 2 == 0 else self.append_ctx(reply=line)
                     return "设置成功"
             elif query == "#清空":
-                self.ctx = deque()
+                self.ctx = list()
                 return f"[{self.uid}]的会话已清空，请继续新话题~"
             elif query == "#长度":
                 return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
-                    .format(self.uid, len(self.ctx), len("\r\n".join(self.ctx)))
+                    .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
             elif "#del" in query:
                 num = query.replace("#del", "", 1).strip()
                 if num == "":
@@ -111,5 +116,5 @@ class ChatAI(ReplyAI, ABC):
                 for i in range(num):
                     self.ctx.pop()
                 return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
-                    .format(self.uid, len(self.ctx), len("\r\n".join(self.ctx)))
+                    .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
         return None

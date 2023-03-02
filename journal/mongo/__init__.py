@@ -41,13 +41,13 @@ class MongoBase:
 
 class JlMgData(MongoBase):
     def __init__(self, _id=None, uid=None, model_id=None, from_type=None,
-                 ctx_len=0, ctx_word_len=0, state=0, **kw):
+                 ctx_len=0, prompt_len=0, state=0, **kw):
         super().__init__(_id)
         self.uid = uid
         self.model_id = model_id
         self.from_type = from_type
         self.ctx_len = ctx_len
-        self.ctx_word_len = ctx_word_len
+        self.prompt_len = prompt_len
         self.state = state
         self.query = None
         self.prompt = None

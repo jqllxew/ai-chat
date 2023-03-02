@@ -4,18 +4,23 @@ server:
 
 chat:
   openai:
-    # 查看地址 https://beta.openai.com/account/api-keys
-    api-key:
-    # 限制上下文最大请求文本长度
-    max-req-length: 1024
-    # 限制返回的tokens数量
-    max-resp-tokens: 512
-    # 可选模型默认第一个 参考https://beta.openai.com/docs/models/gpt-3
-    model-select:
+    api-key: # 查看地址 https://beta.openai.com/account/api-keys
+    max-req-length: 1024 # 限制上下文最大请求文本长度
+    max-resp-tokens: 512 # 限制返回的tokens数量
+    model-select: # 可选模型默认第一个 参考https://beta.openai.com/docs/models/gpt-3
       - text-davinci-003
       - text-curie-001
       - text-babbage-001
       - text-ada-001
+    proxy: # 设置代理
+  openai-chatgpt:
+    api-key:
+    max-req-length: 1536
+    max-resp-tokens: 512
+    model-select:
+      - gpt-3.5-turbo
+      - gpt-3.5-turbo-0301
+    proxy:
 
 qq:
   # CQ-http地址

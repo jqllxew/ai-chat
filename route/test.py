@@ -22,10 +22,7 @@ def chat_api():
 def ctx_set(uid):
     ctx = aichat.u_model(uid).ctx
     ctx.append(request.args.get('msg'))
-    data = {}
-    for k, v in ctx.items():
-        data[k] = list(v)
-    return json.dumps(data, ensure_ascii=False)
+    return json.dumps(list(ctx), ensure_ascii=False)
 
 
 @test_api.route('/stream', methods=['POST'])

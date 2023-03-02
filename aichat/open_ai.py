@@ -2,28 +2,35 @@ import openai
 
 from config import chat as chat_conf, display
 from logger import logger
-from .chat_ai import ChatAI
+from .chatai import ChatAI
 
 
 class OpenAI(ChatAI):
-    def __init__(self, api_key: str, max_req_length: int, max_resp_tokens: int, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, api_key, max_req_length, max_resp_tokens, proxy=None, model_id=None, **kw):
+        super().__init__(**kw)
         openai.api_key = api_key
-        if self.model_id is None:
-            self.model_id = "text-davinci-003"
+        openai.proxy = {
+            'http': proxy,
+            'https': proxy
+        } if proxy else None
+        self.model_id = model_id or "text-davinci-003"
         self.max_req_length = max_req_length
         self.max_resp_tokens = max_resp_tokens
 
+    def join_ctx(self, sep="\n\n"):
+        return sep.join(self.ctx)
+
     # overwrite
-    def get_prompt(self, query="", sep="\n\n"):
-        prompt = super().get_prompt(query, sep)
-        while len(prompt) > self.max_req_length:
-            logger.warn(f"[OPEN_AI] {self.uid}:ctx_word_count {len(prompt)} > {self.max_req_length}")
-            self.ctx.popleft()
-            prompt = super().get_prompt(sep=sep)
+    def get_prompt(self, query=""):
+        prompt = super().get_prompt(query)
+        while self.get_prompt_len(prompt) > self.max_req_length:
+            logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
+                        f"{self.get_prompt_len(prompt)} > {self.max_req_length}")
+            self.ctx.pop(0)
+            prompt = super().get_prompt()
         return prompt
 
-    def generate(self, prompt: str, stream=False):
+    def generate(self, prompt, stream=False):
         res = openai.Completion.create(
             model=self.model_id,  # 对话模型的名称
             prompt=prompt,
@@ -38,25 +45,22 @@ class OpenAI(ChatAI):
             stream=stream)
         if stream:
             return (x.choices[0].text for x in res)
-        else:
-            return res.choices[0].text
+        return res.choices[0].text
 
     def reply_text(self, query: str, stream=False, before=None, after=None, error=None):
         return super().reply_text(
             query=query, stream=stream,
-            before=before or (lambda _, x: f"[OPEN_AI]{self.uid}-len:{len(x)}\n{x}"),
-            after=after or (lambda x, _: f"[OPEN_AI]{self.uid}-reply:{x}"),
-            error=error or (lambda x, _: f"[OPEN_AI]{self.uid}-error:{x}")
+            before=before or (lambda _, x: f"[{self.model_id}]{self.uid}-len:{len(x)}\n{x}"),
+            after=after or (lambda x, _: f"[{self.model_id}]{self.uid}-reply:{x}"),
+            error=error or (lambda x, _: f"[{self.model_id}]{self.uid}-error:{x}")
         )
 
-    def instruction(self, query, _help=None):
-        ins = super().instruction(query)
-        if ins is None and "#切换" in query:
+    def instruction(self, query, chat_type='openai'):
+        if "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
-            model_select = display(chat_conf['openai']['model-select'])
-            if model_select is not None and model_id in model_select:
+            model_select = display(chat_conf[chat_type]['model-select'])
+            if model_select and model_id in model_select:
                 self.model_id = model_id
-                ins = f"[{self.uid}]已切换模型{model_id}"
-            else:
-                ins = f"未找到{model_id}"
-        return ins
+                return f"[{self.uid}]已切换模型{model_id}"
+            return f"未找到{model_id}"
+        return super().instruction(query)

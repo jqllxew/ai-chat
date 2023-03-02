@@ -1,6 +1,5 @@
 import time
 from abc import ABC
-from collections import deque
 from journal.mongo import MongoBase, JlMgData
 from logger import logger
 
@@ -8,13 +7,13 @@ table_name = "journal"
 
 
 class Journal(ABC):
-    def __init__(self, uid, model_id, from_type, ctx=None,
+    def __init__(self, uid, model_id, from_type, ctx=None, prompt_len=0,
                  _before=..., _after=..., _error=..., **kwargs):
         self.uid = uid
         self.model_id = model_id
         self.from_type = from_type
-        self.ctx_len = len(ctx) if isinstance(ctx, deque) else 0
-        self.ctx_word_len = len("\r\n".join(ctx)) if isinstance(ctx, deque) else 0
+        self.ctx_len = len(ctx) if isinstance(ctx, list) else 0
+        self.prompt_len = prompt_len
         self._before = _before
         self._after = _after
         self._error = _error

@@ -1,9 +1,11 @@
-
-
 import openai
+import config
 
+openai.api_key = config.chat['openai-chatgpt']['api-key']
+openai.proxy = config.chat['openai-chatgpt']['proxy']
 res = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",  # 对话模型的名称
+    model="gpt-3.5-turbo",
+    max_tokens=512,
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Who won the world series in 2020?"},
@@ -13,6 +15,5 @@ res = openai.ChatCompletion.create(
     stream=True
 )
 
-print(res)
 for x in res:
     print(x.choices[0]['delta'].get('content') or '\n', end='')
