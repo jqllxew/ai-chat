@@ -55,3 +55,4 @@ class JlMgData(MongoBase):
         self.reply = None
         self.r_time = None
         self.error = None
+        self.other = None

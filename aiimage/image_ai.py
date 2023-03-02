@@ -16,6 +16,7 @@ from fanyi import youdao
 diffusion_conf = image_conf['diffusion']
 qq_image_pattern = "\\[CQ:image,.*url=(.+?)]"  # qq图片
 wx_image_pattern = "\\[base64=(.+?)]"  # wx图片
+general_image_pattern = "\\[image=(.+?)]"
 seed_pattern = "seed=(\\d+)"  # 随机数
 width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
 ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
@@ -32,6 +33,9 @@ class ImagePrompt:
         elif from_type == 'wx':
             img_base64 = re.findall(wx_image_pattern, query)
             query = re.sub(wx_image_pattern, '', query)
+        else:
+            img_url = re.findall(general_image_pattern, query)
+            query = re.sub(general_image_pattern, '', query)
         seed = re.findall(seed_pattern, query)
         query = re.sub(seed_pattern, '', query)
         width_height = re.findall(width_height_pattern, query)
