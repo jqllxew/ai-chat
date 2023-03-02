@@ -5,15 +5,15 @@ from config import image as image_conf, display
 user_models: dict[str, ImageAI] = {}
 
 
-def u_model(uid, from_type=None):
+def u_model(uid, from_type=None) -> ImageAI:
     m = user_models.get(uid)
     if m is None:
-        if display(image_conf['diffusion']) is not None:
+        if display(image_conf['diffusion']):
             m = Diffusion(
                 uid=uid,
                 from_type=from_type,
                 model_id=image_conf['diffusion']['uri'])
-        elif display(image_conf['diffusers']) is not None:
+        elif display(image_conf['diffusers']):
             from aiimage.diffusers import Diffusers
             m = Diffusers(
                 uid=uid,

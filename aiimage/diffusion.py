@@ -121,10 +121,10 @@ class Diffusion(ImageAI):
             return None, err
         return self.upload(img)
 
-    def reply(self, query: str, **kwargs):
+    def reply(self, query: str, before=None, after=None, error=None):
         return super().reply(
             query=query,
-            _before=lambda q, p: f"[sd_api]{self.uid}-prompt:{p}",
-            _after=lambda x: f"[sd_api]{self.uid}-reply:{x}",
-            _error=lambda x: f"[sd_api]{self.uid}-error:{x}"
+            before=before or (lambda _, x: f"[sd_api]{self.uid}-prompt:{p}"),
+            after=after or (lambda x, _: f"[sd_api]{self.uid}-reply:{x}"),
+            error=error or (lambda x, _: f"[sd_api]{self.uid}-error:{x}")
         )

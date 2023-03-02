@@ -77,16 +77,16 @@ class ImageAI(ReplyAI, ABC):
         except Exception as e:
             return None, str(e)
 
-    def reply(self, query: str, _before=..., _after=..., _error=...):
+    def reply(self, query: str, before=..., after=..., error=...):
         """
-        :param _before:
-        :param _after:
-        :param _error:
+        :param before:
+        :param after:
+        :param error:
         :param query: 绘画要求
         :return: reply image_path
         """
         jl = journal.lifecycle(**self.__dict__,
-                               _before=_before, _after=_after, _error=_error)
+                               _before=before, _after=after, _error=error)
         ipt = ImagePrompt(query, self.from_type, self.model_id)
         jl.before(query, f"{ipt.prompt}|neg={ipt.neg_prompt}|{ipt.width}x{ipt.height}")
         now = time.time()

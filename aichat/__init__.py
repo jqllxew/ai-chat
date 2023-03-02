@@ -6,11 +6,11 @@ from .open_ai import OpenAI
 user_models: dict[str, ChatAI] = {}
 
 
-def u_model(uid, from_type=None, need_ctx=True):
+def u_model(uid, from_type=None, need_ctx=True) -> ChatAI:
     m = user_models.get(uid)
     if m is None:
         openai_conf = display(chat_conf['openai'])
-        if openai_conf is not None:
+        if openai_conf:
             m = OpenAI(
                 api_key=openai_conf['api-key'],
                 uid=uid,

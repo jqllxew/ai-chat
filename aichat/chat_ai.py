@@ -31,13 +31,13 @@ class ChatAI(ReplyAI, ABC):
         """
         raise NotImplementedError
 
-    def reply_text(self, query: str, stream=False, _before=None, _after=None, _error=None):
+    def reply_text(self, query: str, stream=False, before=..., after=..., error=...):
         """
         :param query: 用户发来的文本消息
         :param stream: 是否返回生成器
-        :param _before:
-        :param _after:
-        :param _error:
+        :param before:
+        :param after:
+        :param error:
         :return: reply content
         """
         ins = self.instruction(query, self.uid)
@@ -48,7 +48,7 @@ class ChatAI(ReplyAI, ABC):
         else:
             prompt = query
         jl = journal.lifecycle(**self.__dict__,
-                               _before=_before, _after=_after, _error=_error)
+                               _before=before, _after=after, _error=error)
         try:
             jl.before(query, prompt)
             res = self.generate(prompt, stream)
@@ -68,11 +68,11 @@ class ChatAI(ReplyAI, ABC):
         except Exception as e:
             yield jl.error(e)
 
-    def reply(self, query: str):
-        return next(self.reply_text(query, False))
+    def reply(self, query: str, before=None, after=None, error=None):
+        return next(self.reply_text(query, False, before, after, error))
 
-    def reply_stream(self, query: str):
-        return (x for x in self.reply_text(query, True))
+    def reply_stream(self, query: str, before=None, after=None, error=None):
+        return (x for x in self.reply_text(query, True, before, after, error))
 
     def instruction(self, query, _help=...):
         if query[0] == "#":

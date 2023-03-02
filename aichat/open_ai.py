@@ -41,12 +41,12 @@ class OpenAI(ChatAI):
         else:
             return res.choices[0].text
 
-    def reply_text(self, query: str, stream=False, _before=None, _after=None, _error=None):
+    def reply_text(self, query: str, stream=False, before=None, after=None, error=None):
         return super().reply_text(
             query=query, stream=stream,
-            _before=lambda _, x: f"[OPEN_AI]{self.uid}-len:{len(x)}\n{x}",
-            _after=lambda x: f"[OPEN_AI]{self.uid}-reply:{x}",
-            _error=lambda x: f"[OPEN_AI]{self.uid}-error:{x}"
+            before=before or (lambda _, x: f"[OPEN_AI]{self.uid}-len:{len(x)}\n{x}"),
+            after=after or (lambda x, _: f"[OPEN_AI]{self.uid}-reply:{x}"),
+            error=error or (lambda x, _: f"[OPEN_AI]{self.uid}-error:{x}")
         )
 
     def instruction(self, query, _help=None):
