@@ -20,23 +20,22 @@ class Journal(ABC):
 
     def before(self, query, prompt):
         if callable(self._before):
-            logger.info(self._before(query, prompt))
+            self._before(query, prompt)
         else:
             logger.info(f"uid:{self.uid},query: {query}")
 
     def after(self, reply, data=None):
         if callable(self._after):
-            logger.info(self._after(reply, data))
+            self._after(reply, data)
         else:
             logger.info(f"uid:{self.uid},reply: {reply}")
 
     def error(self, e, data=None):
         if callable(self._error):
-            msg = self._error(e, data)
+            self._error(e, data)
         else:
-            msg = f"uid:{self.uid},error: {e}"
-        logger.warn(msg)
-        return msg
+            logger.warn(f"uid:{self.uid},error: {e}")
+        return e
 
 
 class JournalMongo(Journal):
@@ -62,10 +61,9 @@ class JournalMongo(Journal):
     def error(self, e, data=...):
         self.data.r_time = int(time.time())
         self.data.state = 2
-        msg = super().error(e, self.data)
-        self.data.error = msg
+        self.data.error = str(e)
+        super().error(e, self.data)
         self.c.update_one({'_id': self.data.id}, {'$set': self.data.to_dict('_id')})
-        return msg
 
 
 def lifecycle(model_id, **kwargs) -> Journal:

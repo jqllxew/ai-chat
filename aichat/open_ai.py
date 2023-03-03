@@ -50,9 +50,9 @@ class OpenAI(ChatAI):
     def reply_text(self, query: str, stream=False, before=None, after=None, error=None):
         return super().reply_text(
             query=query, stream=stream,
-            before=before or (lambda _, x: f"[{self.model_id}]{self.uid}-len:{len(x)}\n{x}"),
-            after=after or (lambda x, _: f"[{self.model_id}]{self.uid}-reply:{x}"),
-            error=error or (lambda x, _: f"[{self.model_id}]{self.uid}-error:{x}")
+            before=before or (lambda _, x: logger.info(f"[{self.model_id}]{self.uid}-len:{len(x)}\n{x}")),
+            after=after or (lambda x, _: logger.info(f"[{self.model_id}]{self.uid}-reply:{x}")),
+            error=error or (lambda x, _: logger.warn(f"[{self.model_id}]{self.uid}-error:{x}"))
         )
 
     def instruction(self, query, chat_type='openai'):
