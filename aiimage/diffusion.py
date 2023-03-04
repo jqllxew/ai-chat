@@ -3,14 +3,11 @@ import io
 import json
 import random
 from io import BytesIO
-
 import requests
 from PIL import Image
-
 from aiimage.image_ai import ImageAI, ImagePrompt
 from config import image as image_conf, display
 from abc import ABC
-
 from logger import logger
 
 prefix_prompt = display(image_conf['prefix-prompt'])
@@ -120,11 +117,3 @@ class Diffusion(ImageAI):
         if err:
             return None, err
         return self.upload(img)
-
-    def reply(self, query: str, before=None, after=None, error=None):
-        return super().reply(
-            query=query,
-            before=before or (lambda _, x: f"[sd_api]{self.uid}-prompt:{p}"),
-            after=after or (lambda x, _: f"[sd_api]{self.uid}-reply:{x}"),
-            error=error or (lambda x, _: f"[sd_api]{self.uid}-error:{x}")
-        )

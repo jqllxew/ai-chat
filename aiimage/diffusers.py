@@ -2,7 +2,6 @@ from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, D
 import torch
 from PIL import Image
 from threading import Lock
-
 from aiimage.image_ai import ImageAI, ImagePrompt
 from config import image as image_conf, display
 from logger import logger
@@ -98,11 +97,3 @@ class Diffusers(ImageAI):
         if err:
             return None, err
         return self.upload(img)
-
-    def reply(self, query: str, before=None, after=None, error=None):
-        return super().reply(
-            query=query,
-            before=before or (lambda _, x: f"[diffusers]{self.uid}-prompt:{x}"),
-            after=after or (lambda x, _: f"[diffusers]{self.uid}-reply:{x}"),
-            error=error or (lambda x, _: f"[diffusers]{self.uid}-error:{x}")
-        )

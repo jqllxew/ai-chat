@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 import journal
 from ai import ReplyAI
 
@@ -39,21 +40,20 @@ class ChatAI(ReplyAI, ABC):
         """
         raise NotImplementedError
 
-    def reply_text(self, query: str, stream=False, before=..., after=..., error=...):
+    def reply_text(self, query: str, stream=False, jl: journal.Journal = None):
         """
+        :param jl: journal环绕调用
         :param query: 用户发来的文本消息
         :param stream: 是否返回生成器
-        :param before:
-        :param after:
-        :param error:
         :return: reply content
         """
-        ins = self.instruction(query, self.uid)
+        ins = self.instruction(query)
         if ins:
             yield ins
         prompt = self.get_prompt(query)
-        jl = journal.lifecycle(**self.__dict__, prompt_len=self.get_prompt_len(prompt),
-                               _before=before, _after=after, _error=error)
+        if not jl:
+            jl = journal.default_journal(**self.__dict__)
+        jl.prompt_len = self.get_prompt_len(prompt)
         try:
             jl.before(query, prompt)
             res = self.generate(prompt, stream)
@@ -71,13 +71,16 @@ class ChatAI(ReplyAI, ABC):
             if not stream:
                 yield res_text
         except Exception as e:
-            yield jl.error(e)
+            jl.error(e)
 
-    def reply(self, query: str, before=None, after=None, error=None):
-        return next(self.reply_text(query, False, before, after, error))
+    def reply(self, query: str, jl=None):
+        try:
+            return next(self.reply_text(query, False, jl))
+        except Exception:
+            pass
 
-    def reply_stream(self, query: str, before=None, after=None, error=None):
-        return (x for x in self.reply_text(query, True, before, after, error))
+    def reply_stream(self, query: str, jl=None):
+        return (x for x in self.reply_text(query, True, jl))
 
     def instruction(self, query, _help=...):
         if query[0] == "#":

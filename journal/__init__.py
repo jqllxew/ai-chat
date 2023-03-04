@@ -1,75 +1,65 @@
 import time
-from abc import ABC
-from journal.mongo import MongoBase, JlMgData
 from logger import logger
+from .base import BaseDict
 
-table_name = "journal"
 
-
-class Journal(ABC):
-    def __init__(self, uid, model_id, from_type, ctx=None, prompt_len=0,
-                 _before=..., _after=..., _error=..., **kwargs):
+class Journal(BaseDict):
+    def __init__(self, uid=None, model_id=None, from_type=None, ctx=None,
+                 prompt_len=None, **kw):
+        super().__init__()
         self.uid = uid
         self.model_id = model_id
         self.from_type = from_type
-        self.ctx_len = len(ctx) if isinstance(ctx, list) else 0
+        self.ctx_len = len(ctx) if isinstance(ctx, list) else None
         self.prompt_len = prompt_len
-        self._before = _before
-        self._after = _after
-        self._error = _error
 
     def before(self, query, prompt):
-        if callable(self._before):
-            self._before(query, prompt)
-        else:
-            logger.info(f"uid:{self.uid},query: {query}")
+        logger.info(f"[{self.model_id}]uid:{self.uid},query: {query}")
 
-    def after(self, reply, data=None):
-        if callable(self._after):
-            self._after(reply, data)
-        else:
-            logger.info(f"uid:{self.uid},reply: {reply}")
+    def after(self, reply):
+        logger.info(f"[{self.model_id}]uid:{self.uid},reply: {reply}")
 
-    def error(self, e, data=None):
-        if callable(self._error):
-            self._error(e, data)
-        else:
-            logger.warn(f"uid:{self.uid},error: {e}")
-        return e
+    def error(self, e):
+        logger.warn(f"[{self.model_id}]uid:{self.uid},error: {e}")
 
 
-class JournalMongo(Journal):
-    def __init__(self, db, collection, **kwargs):
-        super().__init__(**kwargs)
-        self.c = db[collection]
-        self.data = JlMgData(**self.__dict__)
+class JournalDefault(Journal):
+    def __init__(self, db, **kw):
+        super().__init__(**kw)
+        self.db = db
+        self._id = None
+        self.state = 0
+        self.query = None
+        self.prompt = None
+        self.q_time = None
+        self.reply = None
+        self.r_time = None
+        self.err = None
 
     def before(self, query, prompt):
         super().before(query, prompt)
-        self.data.query = query
-        self.data.prompt = prompt
-        self.data.q_time = int(time.time())
-        self.data._id = self.c.insert_one(self.data.to_dict()).inserted_id
+        self.query = query
+        self.prompt = prompt
+        self.q_time = int(time.time())
+        self._id = self.db.journal.insert_one(self.to_dict('db')).inserted_id
 
-    def after(self, reply, data=...):
-        self.data.reply = reply
-        self.data.r_time = int(time.time())
-        self.data.state = 1
-        super().after(reply, self.data)
-        self.c.update_one({'_id': self.data.id}, {'$set': self.data.to_dict('_id')})
+    def after(self, reply):
+        self.reply = reply
+        self.r_time = int(time.time())
+        self.state = 1
+        super().after(reply)
+        self.db.journal.update_one({'_id': self._id}, {'$set': self.to_dict('_id', 'db')})
 
-    def error(self, e, data=...):
-        self.data.r_time = int(time.time())
-        self.data.state = 2
-        self.data.error = str(e)
-        super().error(e, self.data)
-        self.c.update_one({'_id': self.data.id}, {'$set': self.data.to_dict('_id')})
+    def error(self, e):
+        self.r_time = int(time.time())
+        self.state = 2
+        self.err = str(e)
+        super().error(e)
+        self.db.journal.update_one({'_id': self._id}, {'$set': self.to_dict('_id', 'db')})
 
 
-def lifecycle(model_id, **kwargs) -> Journal:
-    kwargs['model_id'] = model_id
+def default_journal(**kw) -> Journal:
     from .mongo import db
-    if db is not None:
-        return JournalMongo(db=db, collection=table_name, **kwargs)
-    else:
-        return Journal(**kwargs)
+    if db:
+        return JournalDefault(db, **kw)
+    return Journal(**kw)

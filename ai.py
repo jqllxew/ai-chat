@@ -16,11 +16,8 @@ class ReplyAI(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def reply(self, query: str, before=..., after=..., error=...):
+    def reply(self, query: str):
         """
-        :param before: 执行前钩子函数
-        :param after: ...
-        :param error: ...
         :param query: 文本消息
         :return: reply generate()
         """

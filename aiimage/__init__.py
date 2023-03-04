@@ -12,13 +12,13 @@ def u_model(uid, from_type=None) -> ImageAI:
             m = Diffusion(
                 uid=uid,
                 from_type=from_type,
-                model_id=image_conf['diffusion']['uri'])
+                model_id=display(image_conf['diffusion']['uri']))
         elif display(image_conf['diffusers']):
             from aiimage.diffusers import Diffusers
             m = Diffusers(
                 uid=uid,
                 from_type=from_type,
-                model_id=image_conf['diffusers']['model-id'])
+                model_id=display(image_conf['diffusers']['model-id']))
         user_models[uid] = m
     return m
 

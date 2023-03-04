@@ -75,22 +75,20 @@ class ImageAI(ReplyAI, ABC):
             buffer = BytesIO()
             img.save(buffer, format="png")
             return tx_cos.upload(
-                f"{self.model_id}/{self.uid}/{img.width}x{img.height}/{int(time.time()*1000)}.png",
+                f"{self.model_id}/{self.uid}/{img.width}x{img.height}/{int(time.time() * 1000)}.png",
                 buffer.getvalue()
             ), None
         except Exception as e:
             return None, str(e)
 
-    def reply(self, query: str, before=..., after=..., error=...):
+    def reply(self, query: str, jl: journal.Journal = None):
         """
-        :param before:
-        :param after:
-        :param error:
+        :param jl: journal环绕调用
         :param query: 绘画要求
         :return: reply image_path
         """
-        jl = journal.lifecycle(**self.__dict__,
-                               _before=before, _after=after, _error=error)
+        if not jl:
+            jl = journal.default_journal(**self.__dict__)
         ipt = ImagePrompt(query, self.from_type, self.model_id)
         jl.before(query, f"{ipt.prompt}|neg={ipt.neg_prompt}|{ipt.width}x{ipt.height}")
         now = time.time()

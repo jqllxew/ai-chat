@@ -23,7 +23,16 @@ class ChatGPT(OpenAI):
             model=self.model_id,
             max_tokens=self.max_resp_tokens,
             messages=prompt,
-            stream=stream)
+            stream=stream,
+            n=1,                        # 默认为1,对一个提问生成多少个回答
+            temperature=1,              # 默认为1,0~2，数值越高创造性越强
+            # top_p = 1,                # 默认为1,0~1，效果类似temperature，不建议都用
+            # stop = '',                # 遇到stop停止生成内容
+            # presence_penalty = 2,     # 默认为0,-2~2，越大越允许跑题
+            # frequency_penalty = 1.8,  # 默认为0,-2~2，越大越不允许复读机
+            # logit_bias = None,        # 默认无,影响特定词汇的生成概率？
+            # user = 'test',            # 默认无,用户名
+        )
         if stream:
             return (x.choices[0]['delta'].get('content') or '' for x in res)
         return res.choices[0]['message'].get('content')
