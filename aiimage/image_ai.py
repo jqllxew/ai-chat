@@ -12,6 +12,7 @@ from config import image as image_conf
 from ai import ReplyAI
 from cos import tx_cos
 from fanyi import youdao
+from journal import BaseDict
 
 diffusion_conf = image_conf['diffusion']
 qq_image_pattern = "\\[CQ:image,.*url=(.+?)]"  # qq图片
@@ -22,9 +23,9 @@ width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
 ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
 
 
-class ImagePrompt:
-    def __init__(self, query: str, from_type: str, model_id: str):
-        self.model_id = model_id
+class ImagePrompt(BaseDict):
+    def __init__(self, query: str, from_type: str):
+        super().__init__()
         img_url = None
         img_base64 = None
         if from_type == 'qq':
@@ -62,6 +63,18 @@ class ImagePrompt:
             self.img = Image.open(BytesIO(base64_data))
 
 
+class ImageReply(BaseDict):
+    def __init__(self, prompt, neg_prompt, size, seed, elapsed_sec):
+        super().__init__()
+        self.prompt=prompt
+        self.neg_prompt=neg_prompt
+        self.size=size
+        self.seed=seed
+        self.elapsed_sec=elapsed_sec
+        self.image=None
+        self.err = None
+
+
 class ImageAI(ReplyAI, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -89,24 +102,17 @@ class ImageAI(ReplyAI, ABC):
         """
         if not jl:
             jl = journal.default_journal(**self.__dict__)
-        ipt = ImagePrompt(query, self.from_type, self.model_id)
-        jl.before(query, f"{ipt.prompt}|neg={ipt.neg_prompt}|{ipt.width}x{ipt.height}")
+        ipt = ImagePrompt(query, self.from_type)
+        jl.before(query, ipt)
         now = time.time()
         url, err = self.generate(ipt)
-        generate_seconds = time.time() - now
-        reply_format = "提示词：{}\n负提示：{}\n随机数：{}\n耗时秒：{:.3f}\n宽高：{}\n".format(
-            ipt.prompt if ipt.img is None else (ipt.prompt + '+[图片参数]'),
-            "默认" if ipt.neg_prompt == "" else ipt.neg_prompt,
-            ipt.seed, generate_seconds, f"{ipt.width}x{ipt.height}")
-        if err is None:
-            if self.from_type == 'qq':
-                reply_format += f"[CQ:image,file={url}]"
-            elif self.from_type == 'wx':
-                reply_format += f"[image={url}]"
-            else:
-                reply_format += url
-            jl.after(reply_format)
-        else:
-            reply_format += f"generate error because {err}"
+        elapsed_sec = time.time() - now
+        reply = ImageReply(ipt.prompt, ipt.neg_prompt, f"{ipt.width}x{ipt.height}",
+                           ipt.seed, elapsed_sec)
+        if err:
+            reply.err = err
             jl.error(err)
-        return reply_format
+        else:
+            reply.image = url
+            jl.after(reply)
+        return reply

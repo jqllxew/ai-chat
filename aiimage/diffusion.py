@@ -18,13 +18,13 @@ image_max_height = display(_conf['image-max-height'])
 
 
 class ApiImage(ABC):
-    def __init__(self, width=680, height=680, prompt="", neg_prompt="", seed=0,
+    def __init__(self, width=0, height=0, prompt="", neg_prompt="", seed=0,
                  denoising_strength=.0, sampler_index="Euler a", uri=None, **kwargs):
-        self.width = 680 if width == 0 else width  # 图片大小
-        self.height = 680 if height == 0 else height
+        self.width = width or 576  # 图片大小
+        self.height = height or 576
         self.denoising_strength = denoising_strength  # 降噪强度
         self.prompt = f"{prefix_prompt},{prompt}" if prefix_prompt else prompt  # 提示
-        self.negative_prompt = default_neg_prompt if neg_prompt=="" else neg_prompt  # 负提示
+        self.negative_prompt = f"{default_neg_prompt},{neg_prompt}" if neg_prompt else default_neg_prompt  # 负提示
         self.sampler_index = sampler_index  # 采样方法
         self.seed = seed if seed!= 0 else random.randint(0, 2147483647)  # 随机数
         self.styles = []  # 预先定义的样式列表
@@ -44,8 +44,8 @@ class ApiImage(ABC):
         self.s_tmin = 0
         self.s_noise = 1  # 样式噪声
         # extensions 扩展参数
-        self.script_args = _conf['script-args'] if display(_conf['script-args']) is not None else []
-        self.uri = uri if uri else display(_conf['uri'])
+        self.script_args = display(_conf['script-args']) or []
+        self.uri = uri or display(_conf['uri'])
 
     def send_api(self) -> (Image, str):
         """
@@ -60,7 +60,9 @@ class ApiImage(ABC):
             api_url = self.uri + '/sdapi/v1/img2img'
         else:
             return None, "diffusion_api unknown implement"
-        logger.debug(f"prompt: {self.prompt}\nneg_prompt: {self.negative_prompt}\nscript_args: {self.script_args}")
+        logger.debug(f"[{self.uri}]prompt: {self.prompt}\n"
+                     f"neg_prompt: {self.negative_prompt}\n"
+                     f"script_args: {self.script_args}")
         res = requests.post(api_url, json=self.__dict__)
         if res.status_code != 200:
             return None, str(res.content)
@@ -112,8 +114,13 @@ def inference(img=None, **kwargs) -> (Image, str):
 
 
 class Diffusion(ImageAI):
+    def __init__(self, uri=None, **kwargs):
+        super().__init__(**kwargs)
+        self.uri = uri or self.model_id
+        self.model_id = self.model_id or self.uri
+
     def generate(self, ipt: ImagePrompt):
-        img, err = inference(uri=ipt.model_id, **ipt.__dict__)
+        img, err = inference(uri=self.uri, **ipt.to_dict())
         if err:
             return None, err
         return self.upload(img)

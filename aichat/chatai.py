@@ -72,12 +72,13 @@ class ChatAI(ReplyAI, ABC):
                 yield res_text
         except Exception as e:
             jl.error(e)
+            raise e
 
-    def reply(self, query: str, jl=None):
+    def reply(self, query: str, jl=None) -> (str, str):
         try:
-            return next(self.reply_text(query, False, jl))
-        except Exception:
-            pass
+            return next(self.reply_text(query, False, jl)), None
+        except Exception as e:
+            return None, str(e)
 
     def reply_stream(self, query: str, jl=None):
         return (x for x in self.reply_text(query, True, jl))

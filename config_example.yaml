@@ -45,8 +45,9 @@ image:
     hermaphrodite,out of frame,extra limbs,missing arms,missing legs,poorly drawn hands,poorty drawn face,mutation,poorly drawn,
     long body,cloned face,mutated hands,bad hands,bad feet,long neck,missing limb,malformed limbs,malformed hands,fused fingers,
     too many fingers,extra fingers,missing fingers,extra digit,fewer digits,mutated hands and fingers,lowres,text,error,cropped,jpeg
+  reply-template: "提示:{prompt}\n负提示:{neg_prompt}\n随机数:{seed}\n时间:{elapsed_sec:.2f}秒\n宽高:{size}\n{image}"
   diffusion:
-    # 地址
+    # sd接口地址
     uri: http://127.0.0.1:7860
     # 图片最大宽度 px
     image-max-width: 1280

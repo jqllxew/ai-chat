@@ -7,7 +7,7 @@ from .open_ai import OpenAI
 user_models: dict[str, ChatAI] = {}
 
 
-def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, model_id=None):
+def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, model_id=None) -> str:
     if 'openai-chatgpt'==chat_type or 'chatgpt' in chat_type:
         chatgpt_conf = chat_conf['openai-chatgpt']
         user_models[uid] = ChatGPT(
@@ -31,7 +31,7 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, model_id=No
             need_ctx=need_ctx,
             model_id=model_id)
     else:
-        user_models[uid] = ChatAI(uid=uid, from_type=from_type, model_id=model_id)
+        return f"未找到 {chat_type}"
 
 
 def u_model(uid, from_type=None, need_ctx=True) -> ChatAI:
@@ -46,9 +46,14 @@ def chat(uid: str, query: str, from_type: str):
         return aiimage.draw(uid, query[1:], from_type)
     if query.find("#changechat") == 0:
         chat_type = query.replace("#changechat", "", 1).strip()
-        u_change_model(uid, chat_type, from_type)
-        return f"#changechat {chat_type}"
-    return u_model(uid, from_type).reply(query)
+        err = u_change_model(uid, chat_type, from_type)
+        return err or f"#changechat {chat_type}"
+    elif query.find("#changeimage") == 0:
+        image_type = query.replace("#changeimage", "", 1).strip()
+        err = aiimage.u_change_model(uid, image_type, from_type)
+        return err or f"#changeimage {image_type}"
+    reply, err = u_model(uid, from_type).reply(query)
+    return err or reply
 
 
 __all__ = [

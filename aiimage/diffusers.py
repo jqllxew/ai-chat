@@ -79,7 +79,7 @@ def inference(prompt, guidance=None, steps=None, width=512, height=512, seed=0, 
     prompt = f"{prefix_prompt},{prompt}" if auto_prefix and prefix_prompt else prompt
     if neg_prompt == "":
         neg_prompt = default_neg_prompt
-    logger.debug(f"[diffusers] prompt: {prompt}\nneg_prompt: {neg_prompt}")
+    logger.debug(f"[{model_id}]prompt: {prompt}\nneg_prompt: {neg_prompt}")
     try:
         scheduler = DPMSolverMultistepScheduler.from_pretrained(model_id, subfolder="scheduler")  # 创建调度器
         if i2i_support and img is not None:
@@ -93,7 +93,7 @@ def inference(prompt, guidance=None, steps=None, width=512, height=512, seed=0, 
 
 class Diffusers(ImageAI):
     def generate(self, ipt: ImagePrompt):
-        img, err = inference(auto_prefix=True, **ipt.__dict__)
+        img, err = inference(auto_prefix=True, model_id=self.model_id, **ipt.to_dict())
         if err:
             return None, err
         return self.upload(img)

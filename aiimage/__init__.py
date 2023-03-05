@@ -5,26 +5,43 @@ from config import image as image_conf, display
 user_models: dict[str, ImageAI] = {}
 
 
+def u_change_model(uid, image_type='', from_type=None, model_id=None):
+    if 'diffusion' == image_type or 'sd' == image_type:
+        user_models[uid] = Diffusion(
+            uid=uid, from_type=from_type,
+            uri=display(image_conf['diffusion']['uri']),
+            model_id=model_id or display(image_conf['diffusion']['model-id']))
+    elif 'diffusers' == image_type:
+        from aiimage.diffusers import Diffusers
+        user_models[uid] = Diffusers(
+            uid=uid, from_type=from_type,
+            model_id=model_id or display(image_conf['diffusers']['model-id']))
+    else:
+        return f"未找到 {image_type}"
+
+
 def u_model(uid, from_type=None) -> ImageAI:
-    m = user_models.get(uid)
-    if m is None:
-        if display(image_conf['diffusion']):
-            m = Diffusion(
-                uid=uid,
-                from_type=from_type,
-                model_id=display(image_conf['diffusion']['uri']))
-        elif display(image_conf['diffusers']):
-            from aiimage.diffusers import Diffusers
-            m = Diffusers(
-                uid=uid,
-                from_type=from_type,
-                model_id=display(image_conf['diffusers']['model-id']))
-        user_models[uid] = m
-    return m
+    if not user_models.get(uid):
+        u_change_model(uid, 'diffusion', from_type)
+    return user_models.get(uid)
 
 
-def draw(uid: str, query: str, from_type: str):
-    return u_model(uid, from_type).reply(query)
+def draw(uid: str, query: str, from_type: str) -> str:
+    reply = u_model(uid, from_type).reply(query)
+    if reply.err:
+        image = reply.err
+    elif from_type == 'qq':
+        image = f"[CQ:image,file={reply.image}]"
+    elif from_type == 'wx':
+        image = f"[image={reply.image}]"
+    else:
+        image = reply.image
+    template = display(image_conf['reply-template'])
+    if template:
+        return template.format(prompt=reply.prompt, neg_prompt=reply.neg_prompt or "默认",
+                               seed=reply.seed, elapsed_sec=reply.elapsed_sec, size=reply.size, image=image)
+    reply.image = image
+    return str(reply.to_dict())
 
 
 __all__ = [

@@ -37,17 +37,17 @@ class JournalDefault(Journal):
         self.err = None
 
     def before(self, query, prompt):
-        super().before(query, prompt)
+        self.prompt = prompt.to_dict() if isinstance(prompt, BaseDict) else prompt
+        super().before(query, self.prompt)
         self.query = query
-        self.prompt = prompt
         self.q_time = int(time.time())
         self._id = self.db.journal.insert_one(self.to_dict('db')).inserted_id
 
     def after(self, reply):
-        self.reply = reply
+        self.reply = reply.to_dict() if isinstance(reply, BaseDict) else reply
         self.r_time = int(time.time())
         self.state = 1
-        super().after(reply)
+        super().after(self.reply)
         self.db.journal.update_one({'_id': self._id}, {'$set': self.to_dict('_id', 'db')})
 
     def error(self, e):
