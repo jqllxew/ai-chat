@@ -50,6 +50,6 @@ def stream():
 @test_api.route('/db', methods=['GET'])
 def db():
     from journal.mongo import db
-    data = db.u_wx.find_one(**request.args)
+    data = db.u_wx.find_one_json(**request.args)
     return json.dumps(data, ensure_ascii=False)
 

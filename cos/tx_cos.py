@@ -1,3 +1,4 @@
+import json
 import logging
 
 from qcloud_cos import CosS3Client, CosConfig, cos_client
@@ -25,14 +26,52 @@ client = __create()
 
 
 def upload(key, binary_data):
-    if client is None:
-        logger.warn("[COS] cos客户端未被创建，图像将无法展示..")
+    if not client:
+        logger.warn("[COS] cos客户端未被创建..")
         return ""
     response = client.put_object(
         Bucket=bucket,
         Body=binary_data,
         Key=key,
     )
-    if response.get('ETag') is not None:
+    if response.get('ETag'):
         return f"https://{bucket}.cos.{region}.myqcloud.com/{key}"
     return ""
+
+
+def tmp_sts(duration_seconds) -> dict:
+    """
+    set PYTHONUTF8=1
+    pip install qcloud-python-sts
+    :return:
+    """
+    from sts.sts import Sts
+    config = {
+        # 请求URL，域名部分必须和domain保持一致
+        # 使用外网域名时：https://sts.tencentcloudapi.com/
+        # 使用内网域名时：https://sts.internal.tencentcloudapi.com/
+        'url': 'https://sts.tencentcloudapi.com/',
+        'domain': 'sts.tencentcloudapi.com',
+        'duration_seconds': duration_seconds,
+        'secret_id': secret_id,
+        'secret_key': secret_key,
+        'bucket': bucket,
+        'region': region,
+        'allow_prefix': ['*'],
+        'allow_actions': [
+            # 简单上传
+            'name/cos:PutObject',
+            'name/cos:PostObject',
+            # 分片上传
+            'name/cos:InitiateMultipartUpload',
+            'name/cos:ListMultipartUploads',
+            'name/cos:ListParts',
+            'name/cos:UploadPart',
+            'name/cos:CompleteMultipartUpload'
+        ],
+    }
+    try:
+        sts = Sts(config)
+        return dict(sts.get_credential())
+    except Exception as e:
+        logger.warn(f"[COS] err: {e}")

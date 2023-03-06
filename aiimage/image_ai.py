@@ -62,6 +62,9 @@ class ImagePrompt(BaseDict):
             base64_data = base64.b64decode(img_base64[0])
             self.img = Image.open(BytesIO(base64_data))
 
+    def prompt_len(self):
+        return len(self.prompt) + len(self.neg_prompt)
+
 
 class ImageReply(BaseDict):
     def __init__(self, prompt, neg_prompt, size, seed, elapsed_sec):
