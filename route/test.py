@@ -14,7 +14,7 @@ def chat_api():
     try:
         res = {'code': 0, 'data': aichat.chat('test01', data['msg'], 'test')}
     except Exception as error:
-        res = {'code': 1, 'msg': '请求异常: ' + str(error)}
+        res = {'code': 1, 'msg': 'err: ' + str(error)}
     return json.dumps(res, ensure_ascii=False)
 
 
@@ -44,12 +44,5 @@ def stream():
     """
     q = request.get_json()
     g = aichat.u_model("test01").reply_stream(q.get("q"))
-    return flask.make_response(g)
-
-
-@test_api.route('/db', methods=['GET'])
-def db():
-    from journal.mongo import db
-    data = db.u_wx.find_one_json(**request.args)
-    return json.dumps(data, ensure_ascii=False)
-
+    resp = flask.make_response(g)
+    return resp

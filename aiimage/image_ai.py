@@ -4,6 +4,8 @@ import re
 import time
 from abc import ABC, abstractmethod
 from io import BytesIO
+
+import PIL
 import requests
 from PIL.Image import Image
 
@@ -41,6 +43,9 @@ class ImagePrompt(BaseDict):
         query = re.sub(seed_pattern, '', query)
         width_height = re.findall(width_height_pattern, query)
         query = re.sub(width_height_pattern, '', query)
+        prompts = query.split('neg_prompt=')
+        self.origin_prompt = prompts[0]
+        self.origin_neg_prompt = prompts[1]
         if re.search(ch_char_pattern, query):  # 翻译汉字
             query = youdao.chs2en(query)
         prompts = query.split('neg_prompt=')
@@ -55,32 +60,36 @@ class ImagePrompt(BaseDict):
             self.height = int(width_height[0][1])
         self.seed = random.randint(0, 2147483647) if len(seed) == 0 else int(seed[0])
         self.img = None
-        if img_url is not None and len(img_url) > 0:
-            response = requests.get(img_url[0])
-            self.img = Image.open(BytesIO(response.content))
-        if img_base64 is not None and len(img_base64) > 0:
+        self.img_url = None
+        if img_url and len(img_url) > 0:
+            self.img_url = img_url[0]
+            response = requests.get(self.img_url)
+            self.img = PIL.Image.open(BytesIO(response.content))
+        if img_base64 and len(img_base64) > 0:
             base64_data = base64.b64decode(img_base64[0])
-            self.img = Image.open(BytesIO(base64_data))
+            self.img = PIL.Image.open(BytesIO(base64_data))
 
     def prompt_len(self):
         return len(self.prompt) + len(self.neg_prompt)
 
 
 class ImageReply(BaseDict):
-    def __init__(self, prompt, neg_prompt, size, seed, elapsed_sec):
+    def __init__(self, prompt, neg_prompt, size, seed, elapsed_sec, style):
         super().__init__()
         self.prompt=prompt
         self.neg_prompt=neg_prompt
         self.size=size
         self.seed=seed
         self.elapsed_sec=elapsed_sec
+        self.style=style
         self.image=None
         self.err = None
 
 
 class ImageAI(ReplyAI, ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, style=None, **kwargs):
         super().__init__(**kwargs)
+        self.style = style
 
     @abstractmethod
     def generate(self, prompt: ImagePrompt):
@@ -88,10 +97,12 @@ class ImageAI(ReplyAI, ABC):
 
     def upload(self, img: Image):
         try:
+            store_dir = tx_cos.store_dir("img")
             buffer = BytesIO()
             img.save(buffer, format="png")
             return tx_cos.upload(
-                f"{self.model_id}/{self.uid}/{img.width}x{img.height}/{int(time.time() * 1000)}.png",
+                f"{store_dir}/{self.model_id}/{self.uid}/"
+                f"{img.width}x{img.height}/{int(time.time() * 1000)}.png",
                 buffer.getvalue()
             ), None
         except Exception as e:
@@ -111,7 +122,7 @@ class ImageAI(ReplyAI, ABC):
         url, err = self.generate(ipt)
         elapsed_sec = time.time() - now
         reply = ImageReply(ipt.prompt, ipt.neg_prompt, f"{ipt.width}x{ipt.height}",
-                           ipt.seed, elapsed_sec)
+                           ipt.seed, elapsed_sec, self.style)
         if err:
             reply.err = err
             jl.error(err)

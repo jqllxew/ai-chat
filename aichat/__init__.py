@@ -7,7 +7,7 @@ from .open_ai import OpenAI
 user_models: dict[str, ChatAI] = {}
 
 
-def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, model_id=None) -> str:
+def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=True, model_id=None) -> str:
     if 'openai-chatgpt'==chat_type or 'chatgpt' in chat_type:
         chatgpt_conf = chat_conf['openai-chatgpt']
         user_models[uid] = ChatGPT(
@@ -34,9 +34,9 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, model_id=No
         return f"未找到 {chat_type}"
 
 
-def u_model(uid, from_type=None, need_ctx=True) -> ChatAI:
+def u_model(uid, from_type=None, need_ctx=True, need_ins=True) -> ChatAI:
     if not user_models.get(uid):
-        u_change_model(uid, 'openai-chatgpt', from_type, need_ctx)
+        u_change_model(uid, 'openai-chatgpt', from_type, need_ctx, need_ins)
     return user_models.get(uid)
 
 

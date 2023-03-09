@@ -6,9 +6,10 @@ from ai import ReplyAI
 
 class ChatAI(ReplyAI, ABC):
 
-    def __init__(self, need_ctx=True, **kw):
+    def __init__(self, need_ctx=True, need_ins=True, **kw):
         super().__init__(**kw)
         self.need_ctx = need_ctx
+        self.need_ins = need_ins
         self.ctx = list()
 
     def join_ctx(self, sep="\r\n"):
@@ -47,32 +48,33 @@ class ChatAI(ReplyAI, ABC):
         :param stream: 是否返回生成器
         :return: reply content
         """
-        ins = self.instruction(query)
+        ins = self.instruction(query) if self.need_ins else None
         if ins:
             yield ins
-        prompt = self.get_prompt(query)
-        if not jl:
-            jl = journal.default_journal(**self.__dict__)
-        jl.prompt_len = self.get_prompt_len(prompt)
-        try:
-            jl.before(query, prompt)
-            res = self.generate(prompt, stream)
-            if stream:
-                res_text = ""
-                for x in res:
-                    yield x
-                    res_text += x
-            else:
-                res_text = res
-            res_text = res_text.strip()
-            if self.need_ctx:
-                self.append_ctx(reply=res_text)
-                jl.after(res_text)
-            if not stream:
-                yield res_text
-        except Exception as e:
-            jl.error(e)
-            raise e
+        else:
+            prompt = self.get_prompt(query)
+            if not jl:
+                jl = journal.default_journal(**self.__dict__)
+            jl.prompt_len = self.get_prompt_len(prompt)
+            try:
+                jl.before(query, prompt)
+                res = self.generate(prompt, stream)
+                if stream:
+                    res_text = ""
+                    for x in res:
+                        yield x
+                        res_text += x
+                else:
+                    res_text = res
+                res_text = res_text.strip()
+                if self.need_ctx:
+                    self.append_ctx(reply=res_text)
+                    jl.after(res_text)
+                if not stream:
+                    yield res_text
+            except Exception as e:
+                jl.error(e)
+                raise e
 
     def reply(self, query: str, jl=None) -> (str, str):
         try:

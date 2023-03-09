@@ -14,9 +14,9 @@ if _uri and _db:
 
 
 class MongoBase(BaseDict):
-    def __init__(self, _id=None):
+    def __init__(self, _id=None, id: str = None):
         super().__init__()
-        self._id = _id
+        self._id = _id or id
 
     def __setattr__(self, key, val):
         if isinstance(val, ObjectId):

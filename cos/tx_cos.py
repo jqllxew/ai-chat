@@ -1,8 +1,8 @@
-import json
 import logging
+from datetime import datetime
 
 from qcloud_cos import CosS3Client, CosConfig, cos_client
-from config import cos as cos_conf
+from config import cos as cos_conf, display
 from logger import logger
 
 cos_client.logger.setLevel(logging.WARN)
@@ -25,6 +25,13 @@ def __create():
 client = __create()
 
 
+def store_dir(res_type):
+    template = display(cos_conf['tx']['store-dir'])
+    if template:
+        return template.format(type=res_type, date=datetime.utcnow().strftime('%Y%m%d'))
+    return ""
+
+
 def upload(key, binary_data):
     if not client:
         logger.warn("[COS] cos客户端未被创建..")
@@ -35,8 +42,12 @@ def upload(key, binary_data):
         Key=key,
     )
     if response.get('ETag'):
-        return f"https://{bucket}.cos.{region}.myqcloud.com/{key}"
+        return f"{res_url_prefix()}/{key}"
     return ""
+
+
+def res_url_prefix():
+    return f"https://{bucket}.cos.{region}.myqcloud.com"
 
 
 def tmp_sts(duration_seconds) -> dict:
