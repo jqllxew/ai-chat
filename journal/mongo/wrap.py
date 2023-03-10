@@ -23,17 +23,16 @@ class JsonCollection:
     def wrap(self, name, func):
         def wrapped(*args, **kwargs):
             arg = args[0] if len(args) else None
-            target = f"{self.collection.name}.{name}{args}"
             try:
                 if isinstance(arg, dict) and '_id' in arg and isinstance(arg['_id'], str):
                     arg['_id'] = ObjectId(arg['_id'])
-                logger.debug(f"[mongodb]{target}")
+                logger.debug(f"[mongodb]{self.collection.name}.{name}{args}")
                 res = func(*args, **kwargs)
                 if name in self.__class__.wrap_func:
                     return to_json(res)
                 return res
             except Exception as e:
-                logger.error(f"[mongodb]{target}\nerr: {e}")
+                logger.error(f"[mongodb]{self.collection.name}.{name}{args}\nerr: {e}")
                 # traceback.print_exc()
         return wrapped
 

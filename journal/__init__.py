@@ -27,7 +27,7 @@ class JournalDefault(Journal):
     def __init__(self, db, **kw):
         super().__init__(**kw)
         self.db = db
-        self._id = None
+        self.id = None
         self.state = 0
         self.query = None
         self.prompt = None
@@ -41,21 +41,21 @@ class JournalDefault(Journal):
         super().before(query, self.prompt)
         self.query = query
         self.q_time = int(time.time())
-        self._id = self.db.journal.insert_one(self.to_dict('db')).inserted_id
+        self.id = self.db.journal.insert_one(self.to_dict('db')).inserted_id
 
     def after(self, reply):
         self.reply = reply.to_dict() if isinstance(reply, BaseDict) else reply
         self.r_time = int(time.time())
         self.state = 1
         super().after(self.reply)
-        self.db.journal.update_one({'_id': self._id}, {'$set': self.to_dict('_id', 'db')})
+        self.db.journal.update_one({'_id': self.id}, {'$set': self.to_dict('id', 'db')})
 
     def error(self, e):
         self.r_time = int(time.time())
         self.state = 2
         self.err = str(e)
         super().error(e)
-        self.db.journal.update_one({'_id': self._id}, {'$set': self.to_dict('_id', 'db')})
+        self.db.journal.update_one({'_id': self.id}, {'$set': self.to_dict('id', 'db')})
 
 
 def default_journal(**kw) -> Journal:

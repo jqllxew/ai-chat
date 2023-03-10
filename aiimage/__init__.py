@@ -1,6 +1,7 @@
 from aiimage.diffusion import Diffusion
 from aiimage.image_ai import ImageAI
 from config import image as image_conf, display
+from logger import logger
 
 user_models: dict[str, ImageAI] = {}
 
@@ -38,8 +39,13 @@ def draw(uid: str, query: str, from_type: str) -> str:
         image = reply.image
     template = display(image_conf['reply-template'])
     if template:
-        return template.format(prompt=reply.prompt, neg_prompt=reply.neg_prompt or "默认",
-                               seed=reply.seed, elapsed_sec=reply.elapsed_sec, size=reply.size, image=image)
+        try:
+            return template.format(
+                prompt=reply.prompt, neg_prompt=reply.neg_prompt or "默认",
+                seed=reply.seed, elapsed_sec=reply.elapsed_sec,
+                size=reply.size, image=image)
+        except Exception as e:
+            logger.error(f"[aiimage]reply-template模板错误\nerr:{e}")
     reply.image = image
     return str(reply.to_dict())
 

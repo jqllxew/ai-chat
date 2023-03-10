@@ -28,7 +28,10 @@ client = __create()
 def store_dir(res_type):
     template = display(cos_conf['tx']['store-dir'])
     if template:
-        return template.format(type=res_type, date=datetime.utcnow().strftime('%Y%m%d'))
+        try:
+            return template.format(type=res_type, date=datetime.utcnow().strftime('%Y%m%d'))
+        except Exception as e:
+            logger.error(f"[COS] store-dir模板错误\nerr: {e}")
     return ""
 
 
