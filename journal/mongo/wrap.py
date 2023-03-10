@@ -24,7 +24,7 @@ class JsonCollection:
         def wrapped(*args, **kwargs):
             arg = args[0] if len(args) else None
             try:
-                if isinstance(arg, dict) and '_id' in arg and isinstance(arg['_id'], str):
+                if isinstance(arg, dict) and isinstance(arg.get('_id'), str):
                     arg['_id'] = ObjectId(arg['_id'])
                 logger.debug(f"[mongodb]{self.collection.name}.{name}{args}")
                 res = func(*args, **kwargs)

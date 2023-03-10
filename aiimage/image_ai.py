@@ -23,6 +23,13 @@ general_image_pattern = "\\[image=(.+?)]"
 seed_pattern = "seed=(\\d+)"  # 随机数
 width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
 ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
+lora_pattern = "(&lt;|\\<)lora:(.+?)(&gt;|\\>)"  # lora
+
+
+def _match(pattern, query):
+    match = re.findall(pattern, query)
+    query = re.sub(pattern, '', query)
+    return match, query
 
 
 class ImagePrompt(BaseDict):
@@ -31,28 +38,22 @@ class ImagePrompt(BaseDict):
         img_url = None
         img_base64 = None
         if from_type == 'qq':
-            img_url = re.findall(qq_image_pattern, query)
-            query = re.sub(qq_image_pattern, '', query)
+            img_url, query = _match(qq_image_pattern, query)
         elif from_type == 'wx':
-            img_base64 = re.findall(wx_image_pattern, query)
-            query = re.sub(wx_image_pattern, '', query)
+            img_base64, query = _match(wx_image_pattern, query)
         else:
-            img_url = re.findall(general_image_pattern, query)
-            query = re.sub(general_image_pattern, '', query)
-        seed = re.findall(seed_pattern, query)
-        query = re.sub(seed_pattern, '', query)
-        width_height = re.findall(width_height_pattern, query)
-        query = re.sub(width_height_pattern, '', query)
+            img_url, query = _match(general_image_pattern, query)
+        seed, query = _match(seed_pattern, query)
+        width_height, query = _match(width_height_pattern, query)
+        lora, query = _match(lora_pattern, query)
         prompts = query.split('neg_prompt=')
         self.origin_prompt = prompts[0]
-        self.origin_neg_prompt = prompts[1]
+        self.origin_neg_prompt = prompts[1] if len(prompts) > 1 else ""
         if re.search(ch_char_pattern, query):  # 翻译汉字
             query = youdao.chs2en(query)
         prompts = query.split('neg_prompt=')
         self.prompt = prompts[0]
-        self.neg_prompt = ""
-        if len(prompts) == 2:
-            self.neg_prompt = prompts[1]
+        self.neg_prompt = prompts[1] if len(prompts) > 1 else ""
         self.width = 576
         self.height = 576
         if len(width_height) > 0:
@@ -61,11 +62,13 @@ class ImagePrompt(BaseDict):
         self.seed = random.randint(0, 2147483647) if len(seed) == 0 else int(seed[0])
         self.img = None
         self.img_url = None
-        if img_url and len(img_url) > 0:
+        lora = [x[1] for x in lora]
+        self.prompt += f"<lora:{'>,<lora:'.join(lora)}>" if lora else ""
+        if img_url:
             self.img_url = img_url[0]
             response = requests.get(self.img_url)
             self.img = PIL.Image.open(BytesIO(response.content))
-        if img_base64 and len(img_base64) > 0:
+        if img_base64:
             base64_data = base64.b64decode(img_base64[0])
             self.img = PIL.Image.open(BytesIO(base64_data))
 
@@ -117,6 +120,7 @@ class ImageAI(ReplyAI, ABC):
         if not jl:
             jl = journal.default_journal(**self.__dict__)
         ipt = ImagePrompt(query, self.from_type)
+        jl.prompt_len = ipt.prompt_len()
         jl.before(query, ipt)
         now = time.time()
         url, err = self.generate(ipt)

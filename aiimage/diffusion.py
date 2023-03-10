@@ -8,6 +8,8 @@ from PIL import Image
 from aiimage.image_ai import ImageAI, ImagePrompt
 from config import image as image_conf, display
 from abc import ABC
+
+from journal import BaseDict
 from logger import logger
 
 prefix_prompt = display(image_conf['prefix-prompt'])
@@ -17,9 +19,10 @@ image_max_width = display(_conf['image-max-width'])
 image_max_height = display(_conf['image-max-height'])
 
 
-class ApiImage(ABC):
-    def __init__(self, width=0, height=0, prompt="", neg_prompt="", seed=0,
-                 denoising_strength=.0, sampler_index="Euler a", uri=None, **kwargs):
+class ApiImage(BaseDict):
+    def __init__(self, width=0, height=0, prompt="", neg_prompt="", seed=0, denoising_strength=.0,
+                 sampler_index="Euler a", uri=None, **kwargs):
+        super().__init__()
         self.width = width or 576  # 图片大小
         self.height = height or 576
         self.denoising_strength = denoising_strength  # 降噪强度
@@ -63,7 +66,7 @@ class ApiImage(ABC):
         logger.debug(f"[{self.uri}]prompt: {self.prompt}\n"
                      f"neg_prompt: {self.negative_prompt}\n"
                      f"script_args: {self.script_args}")
-        res = requests.post(api_url, json=self.__dict__)
+        res = requests.post(api_url, json=self.to_dict('uri'))
         if res.status_code != 200:
             return None, str(res.content)
         ret = json.loads(res.content)

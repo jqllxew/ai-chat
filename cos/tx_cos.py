@@ -37,8 +37,7 @@ def store_dir(res_type):
 
 def upload(key, binary_data):
     if not client:
-        logger.warn("[COS] cos客户端未被创建..")
-        return ""
+        raise RuntimeError("[COS] cos客户端未被创建..")
     response = client.put_object(
         Bucket=bucket,
         Body=binary_data,

@@ -17,8 +17,9 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=Tr
             max_resp_tokens=display(chatgpt_conf['max-resp-tokens']),
             proxy=display(chatgpt_conf['proxy']),
             from_type=from_type,
+            model_id=model_id,
             need_ctx=need_ctx,
-            model_id=model_id)
+            need_ins=need_ins)
     elif 'openai'==chat_type or 'openai' in chat_type:
         openai_conf = chat_conf['openai']
         user_models[uid] = OpenAI(
@@ -28,8 +29,9 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=Tr
             max_resp_tokens=display(openai_conf['max-resp-tokens']),
             proxy=display(openai_conf['proxy']),
             from_type=from_type,
+            model_id=model_id,
             need_ctx=need_ctx,
-            model_id=model_id)
+            need_ins=need_ins)
     else:
         return f"未找到 {chat_type}"
 
