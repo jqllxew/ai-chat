@@ -1,3 +1,4 @@
+import traceback
 from abc import ABC, abstractmethod
 
 import journal
@@ -80,7 +81,8 @@ class ChatAI(ReplyAI, ABC):
         try:
             return next(self.reply_text(query, False, jl)), None
         except Exception as e:
-            return None, str(e)
+            traceback.print_exc()
+            return None, f"err: {e}"
 
     def reply_stream(self, query: str, jl=None):
         return (x for x in self.reply_text(query, True, jl))

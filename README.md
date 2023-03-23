@@ -54,7 +54,7 @@ site-packages/diffusers/pipelines/stable_diffusion/safety_checker.py
 @torch.no_grad()
 def forward(self, clip_input, images):
 ...
-# has_nsfw_concepts = [len(res["bad_concepts"]) > 0 for res in result] # 设置为空数组
+# has_nsfw_concepts = [len(res["bad_concepts"]) > 0 for res in result]
 has_nsfw_concepts = []
 ...
 ```

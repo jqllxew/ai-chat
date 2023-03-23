@@ -1,4 +1,5 @@
 import openai
+from logger import logger
 from .open_ai import OpenAI
 
 
@@ -17,6 +18,22 @@ class ChatGPT(OpenAI):
 
     def get_prompt_len(self, prompt):
         return sum((len(x.get('content') or '') for x in self.ctx if x))
+
+    def get_prompt(self, query=""):
+        prompt = super(OpenAI, self).get_prompt(query)
+        while self.get_prompt_len(prompt) > self.max_req_length:
+            logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
+                        f"{self.get_prompt_len(prompt)} > {self.max_req_length}")
+            first = self.ctx[0]
+            if isinstance(first, dict) and first.get('role') == "system":
+                if len(self.ctx) > 1:
+                    self.ctx.pop(1)
+                else:
+                    raise RuntimeError("system text too long")
+            else:
+                self.ctx.pop(0)
+            prompt = super(OpenAI, self).get_prompt()
+        return prompt
 
     def generate(self, prompt, stream=False):
         res = openai.ChatCompletion.create(
@@ -38,4 +55,8 @@ class ChatGPT(OpenAI):
         return res.choices[0]['message'].get('content')
 
     def instruction(self, query, chat_type='openai-chatgpt'):
+        if "#system" in query:
+            system_text = query.replace("#system", "", 1).strip()
+            self.ctx.insert(0, {"role": "system", "content": system_text})
+            return "设置成功"
         return super().instruction(query, chat_type)
