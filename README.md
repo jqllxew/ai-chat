@@ -10,9 +10,6 @@ config_example.yaml #配置文件示例 需要改成config.yaml运行
 main.py
 ```
 
-# 功能效果展示
-<img src="assets/screenshot-chat.jpg" width="280"><img src="assets/screenshot-txt2img.jpg" width="280"><img src="assets/screenshot-img2img.jpg" width="270">
-
 # 接入聊天
 - qq需使用 gocqhttp 配置到启动端口，参考：[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)
 - 微信请参考 [simple-wechaty](https://github.com/jqllxew/simple-wechaty)
@@ -39,7 +36,7 @@ pip3 install -r requirements.txt --proxy=xx
 
 具体配置请参考配置文件示例config_example.yaml
 
-# 关于解决 NSFW 问题
+# diffusers NSFW
 #### 使用diffusers库的 Pipeline对象调用模型生成通常会有这样的警告
 ```
 Potential NSFW content was detected in one or more images. A black image will be returned instead.

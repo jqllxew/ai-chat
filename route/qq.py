@@ -4,6 +4,8 @@ from flask import request, Blueprint
 import aichat
 from config import qq as qq_conf
 from logger import logger
+from route._ssml import find_ssml
+from tts import tts_url, tts_cos
 
 qq_api = Blueprint("qq_api", __name__)
 cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
@@ -30,8 +32,7 @@ def receive():
             message = message.replace(at_qq, "", 1)
             message = message.replace(at_nickname, "", 1)
             msg_text = aichat.chat(uid, message, 'qq')
-            msg_text = f"[CQ:at,qq={uid}]\n" + msg_text
-            send_group(gid, msg_text)
+            send_group(gid, uid, msg_text)
     if req_json.get('post_type') == 'request':
         request_type = req_json.get('request_type')       # group
         uid = req_json.get('user_id')
@@ -52,15 +53,32 @@ def receive():
 
 
 def send_private(uid, message):
+    ssml = find_ssml(message)
+    if ssml:
+        if len(ssml) < 255:
+            msg_text = f"[CQ:record,file={tts_url(ssml)}]"
+        else:
+            msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
+    else:
+        msg_text = message
+    print(msg_text)
     res = requests.post(url=cq_http_url + "/send_private_msg",
-                        params={'user_id': int(uid), 'message': message}).json()
+                        params={'user_id': int(uid), 'message': msg_text}).json()
     if res.get('status') != "ok":
         logger.warn(f"[qq]send_private err:{res}")
 
 
-def send_group(gid, message):
+def send_group(gid, uid, message):
+    ssml = find_ssml(message)
+    if ssml:
+        if len(ssml) < 255:
+            msg_text = f"[CQ:record,file={tts_url(ssml)}]"
+        else:
+            msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
+    else:
+        msg_text = f"[CQ:at,qq={uid}]\n" + message
     res = requests.post(url=cq_http_url + "/send_group_msg",
-                        params={'group_id': int(gid), 'message': message}).json()
+                        params={'group_id': int(gid), 'message': msg_text}).json()
     if res["status"] != "ok":
         logger.warn(f"[qq]send_group err:{res}")
 

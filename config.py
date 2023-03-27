@@ -16,9 +16,7 @@ class ConfDict(dict):
             if isinstance(val, dict) and not isinstance(val, ConfDict):
                 self.data[key] = ConfDict(val)
             return self.data[key]
-        if hasattr(self.__class__, "__missing__"):
-            return self.__class__.__missing__(self, key)
-        raise KeyError(key)
+        return self.__class__.__missing__(self, key)
 
     def __missing__(self, key):
         val = ConfDict({}, True)
@@ -51,3 +49,4 @@ image = ConfDict(_data.get('image'))
 cos = ConfDict(_data.get('cos'))
 fanyi = ConfDict(_data.get('fanyi'))
 journal = ConfDict(_data.get('journal'))
+tts = ConfDict(_data.get('tts'))

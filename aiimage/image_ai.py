@@ -121,7 +121,7 @@ class ImageAI(ReplyAI, ABC):
             jl = journal.default_journal(**self.__dict__)
         ipt = ImagePrompt(query, self.from_type)
         jl.prompt_len = ipt.prompt_len()
-        jl.before(query, ipt)
+        jl.before(query, ipt.to_dict("img"))
         now = time.time()
         url, err = self.generate(ipt)
         elapsed_sec = time.time() - now

@@ -4,23 +4,25 @@ server:
 
 chat:
   openai:
-    api-key: # 查看地址 https://beta.openai.com/account/api-keys
-    max-req-length: 1024 # 限制上下文最大请求文本长度
-    max-resp-tokens: 512 # 限制返回的tokens数量
-    model-select: # 可选模型默认第一个 参考https://beta.openai.com/docs/models/gpt-3
-      - text-davinci-003
-      - text-curie-001
-      - text-babbage-001
-      - text-ada-001
-    proxy: # 设置代理
-  openai-chatgpt:
-    api-key:
-    max-req-length: 1536
-    max-resp-tokens: 512
-    model-select:
-      - gpt-3.5-turbo
-      - gpt-3.5-turbo-0301
-    proxy:
+    gpt3:
+      api-key: # 查看地址 https://beta.openai.com/account/api-keys
+      max-req-length: 1024 # 限制上下文最大请求文本长度
+      max-resp-tokens: 512 # 限制返回的tokens数量
+      model-select: # 可选模型默认第一个 参考https://beta.openai.com/docs/models/gpt-3
+        - text-davinci-003
+        - text-curie-001
+        - text-babbage-001
+        - text-ada-001
+      proxy: # 设置代理
+    gpt3.5:
+      api-key:
+      max-req-length: 1536
+      max-resp-tokens: 512
+      model-select:
+        - gpt-3.5-turbo
+        - gpt-3.5-turbo-0301
+      proxy:
+      default-system:
 
 qq:
   # CQ-http地址
@@ -92,6 +94,12 @@ fanyi:
   youdao: # 有道智云 https://ai.youdao.com/console/
     app-key:
     app-secret:
+
+tts:
+  aliyun:
+    app-key:
+    access-key-id:
+    access-key-secret:
 
 journal:
   mongo:

@@ -70,7 +70,7 @@ class ChatAI(ReplyAI, ABC):
                 res_text = res_text.strip()
                 if self.need_ctx:
                     self.append_ctx(reply=res_text)
-                    jl.after(res_text)
+                jl.after(res_text)
                 if not stream:
                     yield res_text
             except Exception as e:
