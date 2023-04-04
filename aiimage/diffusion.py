@@ -66,7 +66,11 @@ class ApiImage(BaseDict):
         logger.debug(f"[{self.uri}]prompt: {self.prompt}\n"
                      f"neg_prompt: {self.negative_prompt}\n"
                      f"script_args: {self.script_args}")
-        res = requests.post(api_url, json=self.to_dict('uri'))
+        sess = requests.Session()
+        proxy = display(_conf['proxy'])
+        if proxy:
+            sess.proxies = {'http': proxy, 'https': proxy}
+        res = sess.post(api_url, json=self.to_dict('uri'), timeout=120)
         if res.status_code != 200:
             return None, str(res.content)
         ret = json.loads(res.content)

@@ -55,7 +55,7 @@ def receive():
 def send_private(uid, message):
     ssml = find_ssml(message)
     if ssml:
-        if len(ssml) < 255:
+        if len(ssml) < 200:
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
@@ -71,7 +71,7 @@ def send_private(uid, message):
 def send_group(gid, uid, message):
     ssml = find_ssml(message)
     if ssml:
-        if len(ssml) < 255:
+        if len(ssml) < 200:
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"

@@ -51,6 +51,7 @@ image:
   diffusion:
     # sd接口地址
     uri: http://127.0.0.1:7860
+    proxy:
     # 图片最大宽度 px
     image-max-width: 1280
     # 图片最大高度 px
