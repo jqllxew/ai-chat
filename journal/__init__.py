@@ -37,7 +37,7 @@ class JournalDefault(Journal):
         self.err = None
 
     def before(self, query, prompt):
-        self.prompt = prompt.to_dict() if isinstance(prompt, BaseDict) else prompt
+        self.prompt = prompt.to_dict('img') if isinstance(prompt, BaseDict) else prompt
         super().before(query, self.prompt)
         self.query = query
         self.q_time = int(time.time())

@@ -36,6 +36,7 @@ def _txt2img(prompt, neg_prompt, guidance, steps, width, height, generator, mode
                 generator=generator)
         finally:
             torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
     return result.images[0]
 
 
