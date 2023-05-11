@@ -10,3 +10,8 @@ diffusers==0.13.1
 transformers==4.27.1
 accelerate==0.16.0
 waitress==2.1.2
+protobuf
+cpm_kernels
+mdtex2html
+sentencepiece
+accelerate

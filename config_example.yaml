@@ -25,7 +25,11 @@ chat:
       default-system:
   thudm:
     glm:
-
+      model-id: THUDM/chatglm-6b-int4
+      quantize: 0
+      max-length: 2048
+      top-p: 0.7
+      temperature: 0.95
 
 qq:
   # CQ-http地址
@@ -34,6 +38,8 @@ qq:
   uid:
   # 昵称
   nickname:
+  # 群聊时使用相同会话上下文
+  group-session: true
 wx:
   # 昵称
   nickname:
@@ -94,18 +100,18 @@ cos: # 使用绘画功能必须配置否则收不到图像
     region:
     bucket:
 
-fanyi:
+fanyi: # 若不需要绘画prompt翻译请忽略
   youdao: # 有道智云 https://ai.youdao.com/console/
     app-key:
     app-secret:
 
-tts:
+tts: # 若不需要文本转语音请忽略
   aliyun:
     app-key:
     access-key-id:
     access-key-secret:
 
-journal:
+journal: # 若不需要记录请忽略
   mongo:
     uri:
     db:

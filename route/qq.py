@@ -1,10 +1,11 @@
+import re
+
 import requests
 from flask import request, Blueprint
 
 import aichat
 from config import qq as qq_conf
 from logger import logger
-from route._ssml import find_ssml
 from tts import tts_url, tts_cos
 
 qq_api = Blueprint("qq_api", __name__)
@@ -12,6 +13,7 @@ cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
 # @QQ号与昵称，因为有时是复制的@，所以有可能是@昵称
 at_qq = f"[CQ:at,qq={qq_conf['uid']}]"
 at_nickname = f"@{qq_conf['nickname']}"
+group_session = qq_conf['group-session']
 
 
 @qq_api.route('/', methods=['POST'])
@@ -31,7 +33,13 @@ def receive():
         if at_qq in message or at_nickname in message:    # 被@时才回答
             message = message.replace(at_qq, "", 1)
             message = message.replace(at_nickname, "", 1)
-            msg_text = aichat.chat(uid, message, 'qq')
+            message = message.strip()
+            if group_session and message[0] != "画":
+                if message[0] != "#":
+                    message = f"[用户{uid}]说:" + message
+                msg_text = aichat.chat(gid, message, 'qq')
+            else:
+                msg_text = aichat.chat(uid, message, 'qq')
             send_group(gid, uid, msg_text)
     if req_json.get('post_type') == 'request':
         request_type = req_json.get('request_type')       # group
@@ -52,10 +60,15 @@ def receive():
     return "ok"
 
 
+def _find_ssml(text):
+    match = re.search(r'<speak.+?>.*?</speak>', text, flags=re.DOTALL)
+    return match.group() if match else None
+
+
 def send_private(uid, message):
-    ssml = find_ssml(message)
+    ssml = _find_ssml(message)
     if ssml:
-        if len(ssml) < 200:
+        if len(ssml) < 160:
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
@@ -69,9 +82,9 @@ def send_private(uid, message):
 
 
 def send_group(gid, uid, message):
-    ssml = find_ssml(message)
+    ssml = _find_ssml(message)
     if ssml:
-        if len(ssml) < 200:
+        if len(ssml) < 160:
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"

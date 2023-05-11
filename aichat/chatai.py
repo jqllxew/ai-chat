@@ -13,8 +13,8 @@ class ChatAI(ReplyAI, ABC):
         self.need_ins = need_ins
         self.ctx = list()
 
-    def join_ctx(self, sep="\r\n"):
-        return sep.join(self.ctx)
+    def join_ctx(self):
+        return self.ctx
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append(query)
@@ -105,9 +105,11 @@ class ChatAI(ReplyAI, ABC):
             elif query == "#ctx":
                 with open("./models/default_ctx.txt", 'r', encoding='utf-8') as f:
                     lines = f.readlines()
+                    query_flag = (len(lines) % 2) == 0
                     for i, line in enumerate(lines):
                         line = line.replace("\n", "", -1)
-                        self.append_ctx(query=line) if i % 2 == 0 else self.append_ctx(reply=line)
+                        self.append_ctx(query=line) if query_flag else self.append_ctx(reply=line)
+                        query_flag = not query_flag
                     return "设置成功"
             elif query == "#清空":
                 self.ctx = list()

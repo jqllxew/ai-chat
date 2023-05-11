@@ -30,7 +30,7 @@ def stream():
     """
     fetch('/test/stream', {method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({q: '你是谁？'})})
+    body: JSON.stringify({q: '你是谁？',model: 'glm'})})
     .then(x => x.body.pipeThrough(new TextDecoderStream()).getReader())
     .then(async reader => {
         console.log(reader);
@@ -43,6 +43,7 @@ def stream():
     :return:
     """
     q = request.get_json()
+    aichat.u_change_model("test01", q.get("model"))
     g = aichat.u_model("test01").reply_stream(q.get("q"))
     resp = flask.make_response(g)
     return resp
