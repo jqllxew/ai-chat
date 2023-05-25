@@ -34,6 +34,7 @@ class ChatGLM(ChatAI):
             for x in self.ctx:
                 if isinstance(x, list) and len(x) == 1:
                     x.append(reply)
+                    break
 
     def get_prompt_len(self, prompt):
         total_word_count = 0
