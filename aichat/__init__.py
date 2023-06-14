@@ -8,29 +8,16 @@ user_models: dict[str, ChatAI] = {}
 
 
 def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=True, model_id=None) -> str:
-    if 'gpt3.5' == chat_type or 'chatgpt' == chat_type:
+    if 'gpt' == chat_type or 'chatgpt' == chat_type:
         if not isinstance(user_models.get(uid), ChatGPT):
-            gpt35_conf = chat_conf['openai']['gpt3.5']
+            gpt_conf = chat_conf['openai']['gpt']
             user_models[uid] = ChatGPT(
                 uid=uid,
-                api_key=display(gpt35_conf['api-key']),
-                max_req_length=display(gpt35_conf['max-req-length']),
-                max_resp_tokens=display(gpt35_conf['max-resp-tokens']),
-                proxy=display(gpt35_conf['proxy']),
-                default_system=display(gpt35_conf['default-system']),
-                from_type=from_type,
-                model_id=model_id,
-                need_ctx=need_ctx,
-                need_ins=need_ins)
-    elif 'gpt3' == chat_type:
-        if not isinstance(user_models.get(uid), OpenAI):
-            gpt3_conf = chat_conf['openai']['gpt3']
-            user_models[uid] = OpenAI(
-                uid=uid,
-                api_key=display(gpt3_conf['api-key']),
-                max_req_length=display(gpt3_conf['max-req-length']),
-                max_resp_tokens=display(gpt3_conf['max-resp-tokens']),
-                proxy=display(gpt3_conf['proxy']),
+                api_key=display(gpt_conf['api-key']),
+                max_req_length=display(gpt_conf['max-req-length']),
+                max_resp_tokens=display(gpt_conf['max-resp-tokens']),
+                proxy=display(gpt_conf['proxy']),
+                default_system=display(gpt_conf['default-system']),
                 from_type=from_type,
                 model_id=model_id,
                 need_ctx=need_ctx,
@@ -54,7 +41,7 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=Tr
 
 def u_model(uid, from_type=None, need_ctx=True, need_ins=True) -> ChatAI:
     if not user_models.get(uid):
-        u_change_model(uid, 'gpt3.5', from_type, need_ctx, need_ins)
+        u_change_model(uid, 'gpt', from_type, need_ctx, need_ins)
     return user_models.get(uid)
 
 

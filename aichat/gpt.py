@@ -63,7 +63,7 @@ class OpenAI(ChatAI):
 class ChatGPT(OpenAI):
     def __init__(self, api_key, max_req_length, max_resp_tokens, model_id=None, default_system=None, **kw):
         super().__init__(api_key, max_req_length, max_resp_tokens, **kw)
-        self.model_id = model_id or "gpt-3.5-turbo"
+        self.model_id = model_id or "gpt-3.5-turbo-0613"
         if default_system:
             self.set_system(default_system)
 
@@ -117,7 +117,7 @@ class ChatGPT(OpenAI):
     def set_system(self, text):
         self.ctx.insert(0, {"role": "system", "content": text})
 
-    def instruction(self, query, chat_type='gpt3.5'):
+    def instruction(self, query, chat_type='gpt'):
         if "#system" in query:
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)

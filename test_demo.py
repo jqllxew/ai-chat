@@ -4,13 +4,13 @@ from tts import speak
 
 
 def _gpt():
-    gpt35_conf = chat_conf['openai']['gpt3.5']
+    gpt_conf = chat_conf['openai']['gpt']
     return ChatGPT(
         uid="test_novel",
-        api_key=display(gpt35_conf['api-key']),
-        max_req_length=display(gpt35_conf['max-req-length']),
-        max_resp_tokens=display(gpt35_conf['max-resp-tokens']),
-        proxy=display(gpt35_conf['proxy']),
+        api_key=display(gpt_conf['api-key']),
+        max_req_length=display(gpt_conf['max-req-length']),
+        max_resp_tokens=display(gpt_conf['max-resp-tokens']),
+        proxy=display(gpt_conf['proxy']),
         from_type="test",
         need_ctx=False,
         need_ins=False)
