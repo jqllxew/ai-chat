@@ -1,7 +1,6 @@
 import aiimage
 from config import chat as chat_conf, display
 from .chatai import ChatAI
-from .glm import ChatGLM
 from .gpt import OpenAI, ChatGPT
 
 user_models: dict[str, ChatAI] = {}
@@ -23,6 +22,7 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=Tr
                 need_ctx=need_ctx,
                 need_ins=need_ins)
     elif 'glm' == chat_type:
+        from .glm import ChatGLM
         if not isinstance(user_models.get(uid), ChatGLM):
             glm_conf = chat_conf['thudm']['glm']
             user_models[uid] = ChatGLM(
