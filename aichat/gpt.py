@@ -1,4 +1,5 @@
 import openai
+from bs4 import BeautifulSoup
 
 from config import chat as chat_conf, display
 from logger import logger
@@ -122,4 +123,20 @@ class ChatGPT(OpenAI):
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)
             return "设置成功"
+        if "#ctx" in query:
+            ctx_path = query.replace("#ctx", "", 1).strip()
+            if not ctx_path:
+                ctx_path = "default_ctx.txt"
+            with open(f"./models/{ctx_path}", 'r', encoding='utf-8') as f:
+                text = f.read()
+                soup = BeautifulSoup(text, 'html.parser')
+                for tag in soup.find_all():
+                    tag_text = tag.get_text(strip=True)
+                    if tag.name == "system":
+                        self.set_system(tag_text)
+                    elif tag.name == "user":
+                        self.append_ctx(query=tag_text)
+                    elif tag.name == "asst":
+                        self.append_ctx(reply=tag_text)
+            return "セットアップ完了"
         return super().instruction(query, chat_type)

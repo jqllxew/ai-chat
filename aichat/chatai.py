@@ -102,8 +102,11 @@ class ChatAI(ReplyAI, ABC):
                 self.append_ctx(add_ctx)
                 return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
                     .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
-            elif query == "#ctx":
-                with open("./models/default_ctx.txt", 'r', encoding='utf-8') as f:
+            elif "#ctx" in query:
+                ctx_path = query.replace("#ctx", "", 1).strip()
+                if not ctx_path:
+                    ctx_path = "default_ctx.txt"
+                with open(f"./models/{ctx_path}", 'r', encoding='utf-8') as f:
                     lines = f.readlines()
                     query_flag = (len(lines) % 2) == 0
                     for i, line in enumerate(lines):
