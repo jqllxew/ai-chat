@@ -5,23 +5,51 @@ server:
 chat:
   openai:
     gpt:
-      api-key:
-      max-req-length: 1536
-      max-resp-tokens: 512
+      api-key: # your api key
       model-select:
-        - gpt-3.5-turbo
-        - gpt-3.5-turbo-0613
-        - gpt-3.5-turbo-16k
-        - gpt-3.5-turbo-16k-0613
-        - gpt-4
-        - gpt-4-0613
-        - gpt-4-32k
-        - gpt-4-32k-0613
-      proxy:
+        gpt-3.5-turbo:
+          max-tokens: 4096
+          max-resp-tokens: 768
+        gpt-3.5-turbo-0613:
+          max-tokens: 4096
+          max-resp-tokens: 768
+        gpt-3.5-turbo-16k:
+          max-tokens: 16384
+          max-resp-tokens: 768
+        gpt-3.5-turbo-16k-0613:
+          max-tokens: 16384
+          max-resp-tokens: 768
+        gpt-4:
+          max-tokens: 8192
+          max-resp-tokens: 768
+        gpt-4-0613:
+          max-tokens: 8192
+          max-resp-tokens: 768
+        gpt-4-32k:
+          max-tokens: 32768
+          max-resp-tokens: 768
+        gpt-4-32k-0613:
+          max-tokens: 32768
+          max-resp-tokens: 768
+      proxy: http://127.0.0.1:7890
       default-system:
+  iflytek:
+    spark:
+      app-id: # your app id
+      api-key: # your api key
+      api-secret: # your api secret
+      model-select:
+        sparkv1.5:
+          domain: general
+          spark-url: ws://spark-api.xf-yun.com/v1.1/chat
+          max-length: 8000
+        sparkv2:
+          domain: generalv2
+          spark-url: ws://spark-api.xf-yun.com/v2.1/chat
+          max-length: 8000
   thudm:
     glm:
-      model-id: THUDM/chatglm-6b-int4
+      model-id: THUDM/chatglm2-6b-int4 # or local path
       quantize: 0
       max-length: 2048
       top-p: 0.7
@@ -101,11 +129,16 @@ fanyi: # 若不需要绘画prompt翻译请忽略
     app-key:
     app-secret:
 
-tts: # 若不需要文本转语音请忽略
-  aliyun:
-    app-key:
-    access-key-id:
-    access-key-secret:
+plugin:
+  tts: # 若不需要文本转语音请忽略
+    aliyun:
+      app-key:
+      access-key-id:
+      access-key-secret:
+  image-recog:
+    aliyun:
+      access-key-id:
+      access-key-secret:
 
 journal: # 若不需要记录请忽略
   mongo:

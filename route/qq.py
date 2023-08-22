@@ -6,7 +6,7 @@ from flask import request, Blueprint
 import aichat
 from config import qq as qq_conf
 from logger import logger
-from tts import tts_url, tts_cos
+from plugin.tts import tts_url, tts_cos
 
 qq_api = Blueprint("qq_api", __name__)
 cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
@@ -74,7 +74,7 @@ def send_private(uid, message):
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
     else:
         msg_text = message
-    print(msg_text)
+    # print(msg_text)
     res = requests.post(url=cq_http_url + "/send_private_msg",
                         params={'user_id': int(uid), 'message': msg_text}).json()
     if res.get('status') != "ok":

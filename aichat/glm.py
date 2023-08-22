@@ -27,6 +27,10 @@ class ChatGLM(ChatAI):
                 model = AutoModel.from_pretrained(self.model_id, trust_remote_code=True).half().cuda()
             model = model.eval()
 
+    def set_system(self, system_text):
+        self.append_ctx(query=system_text)
+        self.append_ctx(reply="我知道了")
+
     def append_ctx(self, query=None, reply=None):
         if query:
             self.ctx.append([query])
@@ -56,13 +60,12 @@ class ChatGLM(ChatAI):
             prompt = self.join_ctx()
         return prompt
 
-    def generate(self, prompt, stream=False):
+    def generate(self, query, jl, stream=False):
         global model, tokenizer
-        history = []
-        query = prompt[-1][0]
-        for x in prompt[:-1]:
-            if isinstance(x, list) and len(x) == 2:
-                history.append((x[0], x[1]))
+        history = [(x[0], x[1]) for x in self.get_prompt() if isinstance(x, list) and len(x) == 2]
+        prompt = self.get_prompt(query)
+        jl.prompt_len = self.get_prompt_len(prompt)
+        jl.before(query, prompt)
         try:
             if stream:
                 return (x for x, _ in model.stream_chat(

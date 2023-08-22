@@ -1,6 +1,7 @@
+import os
 import time
 import wave
-from tts.aliyun_tts import tts, tts_url, tts_cos
+from plugin.tts.aliyun_tts import tts, tts_url, tts_cos
 
 
 def _play_audio(fp):

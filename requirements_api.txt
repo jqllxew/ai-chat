@@ -7,3 +7,6 @@ PyYAML==6.0
 requests==2.28.2
 waitress==2.1.2
 beautifulsoup4
+alibabacloud_imagerecog20190930
+alibabacloud_ocr20191230
+websocket_client

@@ -93,7 +93,11 @@ def inference(prompt, guidance=None, steps=None, width=512, height=512, seed=0, 
 
 
 class Diffusers(ImageAI):
-    def generate(self, ipt: ImagePrompt):
+    def generate(self, query, jl, ipt=None):
+        if ipt is None:
+            return None
+        jl.prompt_len = ipt.prompt_len()
+        jl.before(query, ipt)
         img, err = inference(auto_prefix=True, model_id=self.model_id, **ipt.to_dict())
         if err:
             return None, err

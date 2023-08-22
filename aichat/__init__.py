@@ -2,25 +2,24 @@ import aiimage
 from config import chat as chat_conf, display
 from .chatai import ChatAI
 from .gpt import OpenAI, ChatGPT
+from .spark import ChatSpark
 
 user_models: dict[str, ChatAI] = {}
 
 
-def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=True, model_id=None) -> str:
+def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_ins=True, model_id=None) -> str:
     if 'gpt' == chat_type or 'chatgpt' == chat_type:
         if not isinstance(user_models.get(uid), ChatGPT):
             gpt_conf = chat_conf['openai']['gpt']
             user_models[uid] = ChatGPT(
                 uid=uid,
                 api_key=display(gpt_conf['api-key']),
-                max_req_length=display(gpt_conf['max-req-length']),
-                max_resp_tokens=display(gpt_conf['max-resp-tokens']),
                 proxy=display(gpt_conf['proxy']),
                 default_system=display(gpt_conf['default-system']),
                 from_type=from_type,
                 model_id=model_id,
-                need_ctx=need_ctx,
-                need_ins=need_ins)
+                enable_ctx=enable_ctx,
+                enable_ins=enable_ins)
     elif 'glm' == chat_type:
         from .glm import ChatGLM
         if not isinstance(user_models.get(uid), ChatGLM):
@@ -28,20 +27,32 @@ def u_change_model(uid, chat_type='', from_type=None, need_ctx=True, need_ins=Tr
             user_models[uid] = ChatGLM(
                 uid=uid,
                 from_type=from_type,
-                need_ctx=need_ctx,
+                enable_ctx=enable_ctx,
                 model_id=glm_conf['model-id'],
                 max_length=glm_conf['max-length'],
                 top_p=glm_conf['top-p'],
                 temperature=glm_conf['temperature'],
                 quantize=glm_conf['quantize'],
             )
+    elif 'spark' == chat_type:
+        if not isinstance(user_models.get(uid), ChatSpark):
+            spark_conf = chat_conf['iflytek']['spark']
+            user_models[uid] = ChatSpark(
+                uid=uid,
+                from_type=from_type,
+                enable_ctx=enable_ctx,
+                model_id=spark_conf['model-id'],
+                app_id=spark_conf['app-id'],
+                api_secret=spark_conf['api-secret'],  # 填写控制台中获取的 APISecret 信息
+                api_key=spark_conf['api-key'],  # 填写控制台中获取的 APIKey 信息
+            )
     else:
         return f"未找到 {chat_type}"
 
 
-def u_model(uid, from_type=None, need_ctx=True, need_ins=True) -> ChatAI:
+def u_model(uid, from_type=None, enable_ctx=True, enable_ins=True) -> ChatAI:
     if not user_models.get(uid):
-        u_change_model(uid, 'gpt', from_type, need_ctx, need_ins)
+        u_change_model(uid, 'gpt', from_type, enable_ctx, enable_ins)
     return user_models.get(uid)
 
 

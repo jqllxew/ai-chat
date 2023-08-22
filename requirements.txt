@@ -16,3 +16,6 @@ mdtex2html
 sentencepiece
 accelerate
 beautifulsoup4
+alibabacloud_imagerecog20190930
+alibabacloud_ocr20191230
+websocket_client

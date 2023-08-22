@@ -4,10 +4,11 @@ import json
 import os
 import time
 from urllib.parse import quote_plus
-from config import tts as tts_conf, display
+from config import plugin as plugin_conf, display
 from cos import tx_cos
-from tts.aliyun_token import get_token
+from plugin.tts.aliyun_token import get_token
 
+tts_conf = plugin_conf['tts']
 app_key = display(tts_conf['aliyun']['app-key'])
 host = 'nls-gateway-cn-shanghai.aliyuncs.com'
 url = 'https://' + host + '/stream/v1/tts'

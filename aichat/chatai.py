@@ -1,16 +1,18 @@
 import traceback
 from abc import ABC, abstractmethod
 
+from bs4 import BeautifulSoup
+
 import journal
 from ai import ReplyAI
 
 
 class ChatAI(ReplyAI, ABC):
 
-    def __init__(self, need_ctx=True, need_ins=True, **kw):
+    def __init__(self, enable_ctx=True, enable_ins=True, **kw):
         super().__init__(**kw)
-        self.need_ctx = need_ctx
-        self.need_ins = need_ins
+        self.enable_ctx = enable_ctx
+        self.enable_ins = enable_ins
         self.ctx = list()
 
     def join_ctx(self):
@@ -25,7 +27,7 @@ class ChatAI(ReplyAI, ABC):
         :param query: 用户发来的文本消息
         :return: prompts
         """
-        if self.need_ctx:
+        if self.enable_ctx:
             self.append_ctx(query)
             return self.join_ctx()
         return query
@@ -34,12 +36,17 @@ class ChatAI(ReplyAI, ABC):
         return len(prompt)
 
     @abstractmethod
-    def generate(self, prompt, stream=False):
+    def generate(self, query: str, jl: journal.Journal, stream=False):
         """
-        :param prompt:
+        :param jl:
+        :param query:
         :param stream:
         :return: text:str or Iterator[str]
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_system(self, system_text):
         raise NotImplementedError
 
     def reply_text(self, query: str, stream=False, jl: journal.Journal = None):
@@ -49,17 +56,14 @@ class ChatAI(ReplyAI, ABC):
         :param stream: 是否返回生成器
         :return: reply content
         """
-        ins = self.instruction(query) if self.need_ins else None
+        ins = self.instruction(query) if self.enable_ins else None
         if ins:
             yield ins
         else:
-            prompt = self.get_prompt(query)
             if not jl:
                 jl = journal.default_journal(**self.__dict__)
-            jl.prompt_len = self.get_prompt_len(prompt)
             try:
-                jl.before(query, prompt)
-                res = self.generate(prompt, stream)
+                res = self.generate(query, jl, stream)
                 if stream:
                     res_text = ""
                     for x in res:
@@ -68,7 +72,7 @@ class ChatAI(ReplyAI, ABC):
                 else:
                     res_text = res
                 res_text = res_text.strip()
-                if self.need_ctx:
+                if self.enable_ctx:
                     self.append_ctx(reply=res_text)
                 jl.after(res_text)
                 if not stream:
@@ -85,7 +89,7 @@ class ChatAI(ReplyAI, ABC):
             return None, f"err: {e}"
 
     def reply_stream(self, query: str, jl=None):
-        return (x for x in self.reply_text(query, True, jl))
+        return self.reply_text(query, True, jl)
 
     def instruction(self, query, _help=...):
         if query[0] == "#":
@@ -100,22 +104,26 @@ class ChatAI(ReplyAI, ABC):
             elif "#add" in query:
                 add_ctx = query.replace("#add", "", 1).strip()
                 self.append_ctx(add_ctx)
-                return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
+                return "[{}]会话信息如下：\n总轮数为{}\n总字符(or tokens)长度为{}" \
                     .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
             elif "#ctx" in query:
                 ctx_path = query.replace("#ctx", "", 1).strip()
                 if not ctx_path:
                     ctx_path = "default_ctx.txt"
                 with open(f"./models/{ctx_path}", 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                    query_flag = (len(lines) % 2) == 0
-                    for i, line in enumerate(lines):
-                        line = line.replace("\n", "", -1)
-                        self.append_ctx(query=line) if query_flag else self.append_ctx(reply=line)
-                        query_flag = not query_flag
-                    return "设置成功"
+                    text = f.read()
+                    soup = BeautifulSoup(text, 'html.parser')
+                    for tag in soup.find_all():
+                        tag_text = tag.get_text(strip=True)
+                        if tag.name == "system":
+                            self.set_system(tag_text)
+                        elif tag.name == "user":
+                            self.append_ctx(query=tag_text)
+                        elif tag.name == "asst":
+                            self.append_ctx(reply=tag_text)
+                return "セットアップ完了"
             elif query == "#清空":
-                self.ctx = list()
+                self.ctx.clear()
                 return f"[{self.uid}]的会话已清空，请继续新话题~"
             elif query == "#长度":
                 return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \

@@ -14,3 +14,10 @@
 可以去抱脸选择[支持diffusers库的模型](https://huggingface.co/models?library=diffusers) \
 推荐 [动漫风hakurei/waifu-diffusion](https://huggingface.co/hakurei/waifu-diffusion)
 [2.5D风nuigurumi/basil_mix](https://huggingface.co/nuigurumi/basil_mix/tree/main)
+
+## Demo
+```bash
+# python 3.10
+pip install -r requirements_api.txt
+python chat_demo.py
+```

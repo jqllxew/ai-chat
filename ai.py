@@ -8,9 +8,8 @@ class ReplyAI(ABC):
         self.model_id = model_id
 
     @abstractmethod
-    def generate(self, prompt):
+    def generate(self, query: str, jl):
         """
-        :param prompt:
         :return: text or Iterator
         """
         raise NotImplementedError

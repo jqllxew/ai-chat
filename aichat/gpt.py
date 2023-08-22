@@ -1,13 +1,42 @@
+import hashlib
+import json
 import openai
-from bs4 import BeautifulSoup
-
+import tiktoken
+from aiimage.image_ai import replace_image
 from config import chat as chat_conf, display
 from logger import logger
+from plugin import GptFunction
 from .chatai import ChatAI
+
+_model_select = display(chat_conf['openai']['gpt']['model-select'])
+
+
+def _num_tokens_from_messages(messages, model="gpt-3.5-turbo") -> int:
+    """Returns the number of tokens used by a list of messages."""
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model in _model_select.keys():  # note: future models may deviate from this
+        num_tokens = 0
+        for message in messages:
+            num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+            for key, value in message.items():
+                if not isinstance(value, str):
+                    value = str(value)
+                num_tokens += len(encoding.encode(value))
+                if key == "name":  # if there's a name, the role is omitted
+                    num_tokens += -1  # role is always required and always 1 token
+        num_tokens += 2  # every reply is primed with <im_start>assistant
+        # print(model, num_tokens)
+        return num_tokens
+    else:
+        raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
+  See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
 
 
 class OpenAI(ChatAI):
-    def __init__(self, api_key, max_req_length, max_resp_tokens, proxy=None, model_id=None, **kw):
+    def __init__(self, api_key, proxy=None, model_id=None, **kw):
         super().__init__(**kw)
         openai.api_key = api_key
         openai.proxy = {
@@ -15,17 +44,30 @@ class OpenAI(ChatAI):
             'https': proxy
         } if proxy else None
         self.model_id = model_id or "text-davinci-003"
-        self.max_req_length = max_req_length
+        self.max_req_tokens = None
+        self.max_resp_tokens = None
+        self.set_model_attr()
+
+    def set_model_attr(self):
+        model_attrs = _model_select.get(self.model_id)
+        if model_attrs is None:
+            raise NotImplementedError(f"未找到{self.model_id}")
+        max_tokens = model_attrs['max-tokens']
+        max_resp_tokens = model_attrs['max-resp-tokens']
         self.max_resp_tokens = max_resp_tokens
+        self.max_req_tokens = max_tokens - max_resp_tokens
+
+    def set_system(self, system_text):
+        self.ctx.insert(0, system_text)
 
     def join_ctx(self, sep="\n\n"):
         return sep.join(self.ctx)
 
     def get_prompt(self, query=""):
         prompt = super().get_prompt(query)
-        while self.get_prompt_len(prompt) > self.max_req_length:
+        while self.get_prompt_len(prompt) > self.max_req_tokens:
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
-                        f"{self.get_prompt_len(prompt)} > {self.max_req_length}")
+                        f"{self.get_prompt_len(prompt)} > {self.max_req_tokens}")
             if len(self.ctx) > 1:
                 self.ctx.pop(0)
             else:
@@ -33,7 +75,10 @@ class OpenAI(ChatAI):
             prompt = super().get_prompt()
         return prompt
 
-    def generate(self, prompt, stream=False):
+    def generate(self, query, jl, stream=False):
+        prompt = self.get_prompt(query)
+        jl.prompt_len = self.get_prompt_len(prompt)
+        jl.before(query, prompt)
         res = openai.Completion.create(
             model=self.model_id,  # 对话模型的名称
             prompt=prompt,
@@ -50,23 +95,25 @@ class OpenAI(ChatAI):
             return (x.choices[0].text for x in res)
         return res.choices[0].text
 
-    def instruction(self, query, chat_type='gpt3'):
+    def instruction(self, query, chat_type='gpt'):
         if "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
-            model_select = display(chat_conf['openai'][chat_type]['model-select'])
-            if model_select and model_id in model_select:
+            try:
                 self.model_id = model_id
+                self.set_model_attr()
                 return f"[{self.uid}]已切换模型{model_id}"
-            return f"未找到{model_id}"
+            except Exception as e:
+                return str(e)
         return super().instruction(query)
 
 
 class ChatGPT(OpenAI):
-    def __init__(self, api_key, max_req_length, max_resp_tokens, model_id=None, default_system=None, **kw):
-        super().__init__(api_key, max_req_length, max_resp_tokens, **kw)
-        self.model_id = model_id or "gpt-3.5-turbo-0613"
+    def __init__(self, api_key, model_id=None, default_system=None, **kw):
+        super().__init__(api_key=api_key, model_id=model_id or "gpt-3.5-turbo", **kw)
         if default_system:
             self.set_system(default_system)
+        self._cache_len = {}
+        self.enable_function = True
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})
@@ -76,14 +123,17 @@ class ChatGPT(OpenAI):
         return self.ctx
 
     def get_prompt_len(self, prompt):
-        return sum((len(x.get('content') or '') for x in self.ctx if x))
+        _hash = hashlib.md5(str(prompt).encode()).hexdigest()
+        if self._cache_len.get('_hash') != _hash:
+            self._cache_len['_hash'] = _hash
+            self._cache_len['_len'] = _num_tokens_from_messages(prompt, self.model_id)
+        return self._cache_len['_len']
 
     def get_prompt(self, query=""):
         self.append_ctx(query)
-        prompt = self.join_ctx()
-        while self.get_prompt_len(prompt) > self.max_req_length:
+        while self.get_prompt_len(self.ctx) > self.max_req_tokens:
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
-                        f"{self.get_prompt_len(prompt)} > {self.max_req_length}")
+                        f"{self.get_prompt_len(self.ctx)} > {self.max_req_tokens}")
             if len(self.ctx) > 1:
                 if isinstance(self.ctx[0], dict) and self.ctx[0].get('role') == "system":
                     if len(self.ctx) == 2:
@@ -93,17 +143,47 @@ class ChatGPT(OpenAI):
                     self.ctx.pop(0)
             else:
                 raise RuntimeError("prompt text too long")
-            prompt = self.join_ctx()
-        return prompt
+        return self.ctx
 
-    def generate(self, prompt, stream=False):
+    def generate(self, query, jl, stream=False):
+        prompt = self.get_prompt(query)
+        if replace_image(query) == "":  # 只有图片
+            print("only image")
+            return ""
+        if self.enable_function:
+            response = openai.ChatCompletion.create(
+                model=self.model_id,
+                messages=prompt,
+                functions=GptFunction.functions,
+                function_call="auto",  # auto is default, but we'll be explicit
+            )
+            response_message = response["choices"][0]["message"]
+            if response_message.get("function_call"):
+                # Step 3: call the function
+                # Note: the JSON response may not always be valid; be sure to handle errors
+                function_name = response_message["function_call"]["name"]
+                function_to_call = GptFunction.function_map[function_name]
+                function_args = json.loads(response_message["function_call"]["arguments"])
+                function_response = function_to_call(function_args.get(GptFunction.param_name))
+                # Step 4: send the info on the function call and function response to GPT
+                self.ctx.append(response_message)  # extend conversation with assistant's reply
+                self.ctx.append(
+                    {
+                        "role": "function",
+                        "name": function_name,
+                        "content": function_response,
+                    }
+                )  # extend conversation with function response
+                prompt = self.get_prompt()
+        jl.prompt_len = self.get_prompt_len(prompt)
+        jl.before(query, prompt)
         res = openai.ChatCompletion.create(
             model=self.model_id,
             max_tokens=self.max_resp_tokens,
             messages=prompt,
             stream=stream,
-            n=1,                        # 默认为1,对一个提问生成多少个回答
-            temperature=1,              # 默认为1,0~2，数值越高创造性越强
+            n=1,  # 默认为1,对一个提问生成多少个回答
+            temperature=1,  # 默认为1,0~2，数值越高创造性越强
             # top_p = 1,                # 默认为1,0~1，效果类似temperature，不建议都用
             # stop = '',                # 遇到stop停止生成内容
             # presence_penalty = 2,     # 默认为0,-2~2，越大越允许跑题
@@ -123,20 +203,11 @@ class ChatGPT(OpenAI):
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)
             return "设置成功"
-        if "#ctx" in query:
-            ctx_path = query.replace("#ctx", "", 1).strip()
-            if not ctx_path:
-                ctx_path = "default_ctx.txt"
-            with open(f"./models/{ctx_path}", 'r', encoding='utf-8') as f:
-                text = f.read()
-                soup = BeautifulSoup(text, 'html.parser')
-                for tag in soup.find_all():
-                    tag_text = tag.get_text(strip=True)
-                    if tag.name == "system":
-                        self.set_system(tag_text)
-                    elif tag.name == "user":
-                        self.append_ctx(query=tag_text)
-                    elif tag.name == "asst":
-                        self.append_ctx(reply=tag_text)
-            return "セットアップ完了"
+        elif "#function" in query:
+            system_text = query.replace("#system", "", 1).strip()
+            if system_text == "open" or system_text == "on":
+                self.enable_function = True
+            else:
+                self.enable_function = False
+            return "设置成功"
         return super().instruction(query, chat_type)

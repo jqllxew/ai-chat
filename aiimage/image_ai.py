@@ -2,7 +2,7 @@ import base64
 import random
 import re
 import time
-from abc import ABC, abstractmethod
+from abc import ABC
 from io import BytesIO
 
 import PIL
@@ -13,7 +13,7 @@ import journal
 from config import image as image_conf
 from ai import ReplyAI
 from cos import tx_cos
-from fanyi import youdao
+from plugin import youdao
 from journal import BaseDict
 
 diffusion_conf = image_conf['diffusion']
@@ -30,6 +30,12 @@ def _match(pattern, query):
     match = re.findall(pattern, query)
     query = re.sub(pattern, '', query)
     return match, query
+
+
+def replace_image(query):
+    query = re.sub(qq_image_pattern, '', query)
+    query = re.sub(wx_image_pattern, '', query)
+    return query.strip()
 
 
 class ImagePrompt(BaseDict):
@@ -79,13 +85,13 @@ class ImagePrompt(BaseDict):
 class ImageReply(BaseDict):
     def __init__(self, prompt, neg_prompt, size, seed, elapsed_sec, style):
         super().__init__()
-        self.prompt=prompt
-        self.neg_prompt=neg_prompt
-        self.size=size
-        self.seed=seed
-        self.elapsed_sec=elapsed_sec
-        self.style=style
-        self.image=None
+        self.prompt = prompt
+        self.neg_prompt = neg_prompt
+        self.size = size
+        self.seed = seed
+        self.elapsed_sec = elapsed_sec
+        self.style = style
+        self.image = None
         self.err = None
 
 
@@ -94,8 +100,8 @@ class ImageAI(ReplyAI, ABC):
         super().__init__(**kwargs)
         self.style = style
 
-    @abstractmethod
-    def generate(self, prompt: ImagePrompt):
+    # @abstractmethod
+    def generate(self, query: str, jl, ipt=None):
         raise NotImplementedError
 
     def upload(self, img: Image):
@@ -117,13 +123,10 @@ class ImageAI(ReplyAI, ABC):
         :param query: 绘画要求
         :return: reply image_path
         """
-        if not jl:
-            jl = journal.default_journal(**self.__dict__)
-        ipt = ImagePrompt(query, self.from_type)
-        jl.prompt_len = ipt.prompt_len()
-        jl.before(query, ipt)
+        jl = journal.default_journal(**self.__dict__)
         now = time.time()
-        url, err = self.generate(ipt)
+        ipt = ImagePrompt(query, self.from_type)
+        url, err = self.generate(query, jl, ipt)
         elapsed_sec = time.time() - now
         reply = ImageReply(ipt.prompt, ipt.neg_prompt, f"{ipt.width}x{ipt.height}",
                            ipt.seed, elapsed_sec, self.style)

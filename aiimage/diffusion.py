@@ -126,7 +126,11 @@ class Diffusion(ImageAI):
         self.uri = uri or self.model_id
         self.model_id = self.model_id or self.uri
 
-    def generate(self, ipt: ImagePrompt):
+    def generate(self,query, jl, ipt=None):
+        if ipt is None:
+            return None
+        jl.prompt_len = ipt.prompt_len()
+        jl.before(query, ipt)
         img, err = inference(uri=self.uri, **ipt.to_dict())
         if err:
             return None, err

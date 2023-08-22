@@ -3,7 +3,7 @@ import re
 import gradio as gr
 import torch
 
-from fanyi import youdao
+from plugin import youdao
 from aiimage.diffusers import prefix_prompt, inference
 from config import image as image_conf, display
 from logger import logger

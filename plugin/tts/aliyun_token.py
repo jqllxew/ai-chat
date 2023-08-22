@@ -6,8 +6,9 @@ import requests
 import time
 import uuid
 from urllib import parse
-from config import tts as tts_conf, display
+from config import plugin as plugin_conf, display
 
+tts_conf = plugin_conf['tts']
 access_key_id = tts_conf['aliyun']['access-key-id']
 access_key_secret = tts_conf['aliyun']['access-key-secret']
 _token = {
