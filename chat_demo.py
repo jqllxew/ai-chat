@@ -14,7 +14,7 @@ def create_gpt():
         api_key=display(gpt_conf['api-key']),
         proxy=display(gpt_conf['proxy']),
         from_type="test",
-        enable_ins=False,
+        enable_ins=True,
     )
 
 
@@ -52,9 +52,9 @@ serious,sad,disgust,jealousy,embarrassed,happy,fear,surprise,neutral,frustrated,
 
 
 if __name__ == "__main__":
-    # ai = gpt_living()
+    ai = gpt_living()
     # ai = create_gpt()
-    ai = create_spark()
+    # ai = create_spark()
     while True:
         lines = ""
         query = input("用户：")

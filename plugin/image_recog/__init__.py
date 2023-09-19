@@ -68,11 +68,7 @@ def get_scene(image_path, is_local=False):
     body = _recog(image_path, RecognizeSceneAdvanceRequest(), is_local)
     return ','.join([f'{x.value}:{x.confidence}' for x in body.data.tags])
 
+
 def get_character(image_path, is_local=False):
     body = _recog(image_path, RecognizeCharacterAdvanceRequest(), is_local)
     return '\n'.join([x.text for x in body.data.results])
-
-if __name__ == '__main__':
-    print(get_character('https://checkimage.neea.cn/DCCA470BA1B4239AE8D342627CDEA789.jpg'))
-    # response = requests.post('https://jlpt.neea.cn/book.do')
-    # print(response.text)

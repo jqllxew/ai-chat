@@ -13,10 +13,10 @@ _model_select = display(chat_conf['openai']['gpt']['model-select'])
 
 def _num_tokens_from_messages(messages, model="gpt-3.5-turbo") -> int:
     """Returns the number of tokens used by a list of messages."""
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        encoding = tiktoken.get_encoding("cl100k_base")
+    # try:
+        # encoding = tiktoken.encoding_for_model(model)
+    # except KeyError:
+        # encoding = tiktoken.get_encoding("cl100k_base")
     if model in _model_select.keys():  # note: future models may deviate from this
         num_tokens = 0
         for message in messages:
@@ -24,11 +24,14 @@ def _num_tokens_from_messages(messages, model="gpt-3.5-turbo") -> int:
             for key, value in message.items():
                 if not isinstance(value, str):
                     value = str(value)
-                num_tokens += len(encoding.encode(value))
+                # num_tokens += len(encoding.encode(value))
+
+                num_tokens += len(value)
                 if key == "name":  # if there's a name, the role is omitted
                     num_tokens += -1  # role is always required and always 1 token
-        num_tokens += 2  # every reply is primed with <im_start>assistant
-        # print(model, num_tokens)
+        if num_tokens > 0:
+            num_tokens += 2  # every reply is primed with <im_start>assistant
+            num_tokens += int(num_tokens/5)
         return num_tokens
     else:
         raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
@@ -204,10 +207,22 @@ class ChatGPT(OpenAI):
             self.set_system(system_text)
             return "设置成功"
         elif "#function" in query:
-            system_text = query.replace("#system", "", 1).strip()
+            system_text = query.replace("#function", "", 1).strip()
             if system_text == "open" or system_text == "on":
                 self.enable_function = True
             else:
                 self.enable_function = False
             return "设置成功"
+        elif "#delfirst" in query:
+            if self.ctx[0].get('role') == "system":
+                self.ctx.pop(1)
+            else:
+                self.ctx.pop(0)
+            return "[{}]已删除前项，会话信息如下：\n总轮数为{}\n总字符(or tokens)长度为{}" \
+                    .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
+        elif "#addasst" in query:
+            add_ctx = query.replace("#addasst", "", 1).strip()
+            self.append_ctx(reply=add_ctx)
+            return "[{}]已添加助手消息，会话信息如下：\n总轮数为{}\n总字符(or tokens)长度为{}" \
+                .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
         return super().instruction(query, chat_type)
