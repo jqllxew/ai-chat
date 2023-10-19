@@ -139,6 +139,12 @@ plugin:
     aliyun:
       access-key-id:
       access-key-secret:
+  speech-recog:
+    voices-base-path:
+    aliyun:
+      app-key:
+      access-key-id:
+      access-key-secret:
 
 journal: # 若不需要记录请忽略
   mongo:

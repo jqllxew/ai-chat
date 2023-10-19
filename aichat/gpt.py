@@ -116,7 +116,7 @@ class ChatGPT(OpenAI):
         if default_system:
             self.set_system(default_system)
         self._cache_len = {}
-        self.enable_function = True
+        self.enable_function = False
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})

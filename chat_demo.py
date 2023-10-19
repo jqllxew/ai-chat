@@ -1,7 +1,7 @@
 import logging
+
 from aichat import ChatGPT, ChatSpark
 from config import chat as chat_conf, display
-from plugin.tts import speak
 from logger import logger
 
 logger.setLevel(logging.ERROR)

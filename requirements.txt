@@ -19,3 +19,4 @@ beautifulsoup4
 alibabacloud_imagerecog20190930
 alibabacloud_ocr20191230
 websocket_client
+aliyun-python-sdk-core==2.13.3

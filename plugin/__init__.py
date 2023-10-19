@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from plugin import image_recog
-
+from plugin import speech_recog
 
 def get_current_time(val0=0) -> str:
     utc_offset = timedelta(hours=val0)
@@ -16,7 +16,8 @@ class GptFunction:
     function_map = {
         "get_current_time": get_current_time,
         "get_image_tag": image_recog.get_tag,
-        "get_image_character": image_recog.get_character
+        "get_image_character": image_recog.get_character,
+        # "get_speech_text": speech_recog.get_speech_text,
     }
     functions = [
         {
@@ -29,8 +30,7 @@ class GptFunction:
                         "type": "number",
                         "description": "UTC偏移（以小时为单位）",
                     },
-                },
-                "required": [param_name],
+                }, "required": [param_name],
             }
         },
         {
@@ -43,8 +43,7 @@ class GptFunction:
                         "type": "string",
                         "description": "图片url",
                     },
-                },
-                "required": [param_name],
+                }, "required": [param_name],
             }
         },
         {
@@ -57,10 +56,22 @@ class GptFunction:
                         "type": "string",
                         "description": "图片url",
                     },
-                },
-                "required": [param_name],
+                }, "required": [param_name],
             }
-        }
+        },
+        # {
+        #     "name": "get_speech_text",
+        #     "description": "传入音频返回识别的文本信息",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             param_name: {
+        #                 "type": "string",
+        #                 "description": "语音文件(支持.mp3,.amr)路径",
+        #             },
+        #         }, "required": [param_name],
+        #     }
+        # },
     ]
 
 

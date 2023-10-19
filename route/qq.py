@@ -6,6 +6,7 @@ from flask import request, Blueprint
 import aichat
 from config import qq as qq_conf
 from logger import logger
+from plugin import speech_recog
 from plugin.tts import tts_url, tts_cos
 
 qq_api = Blueprint("qq_api", __name__)
@@ -14,26 +15,29 @@ cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
 at_qq = f"[CQ:at,qq={qq_conf['uid']}]"
 at_nickname = f"@{qq_conf['nickname']}"
 group_session = qq_conf['group-session']
-
+speech_pattern = "\\[CQ:.*file=(.+?\\.amr).*"
 
 @qq_api.route('/', methods=['POST'])
 def receive():
     req_json = request.get_json()
+    message = req_json.get('raw_message')
     if req_json.get('message_type') == 'private':         # 私聊信息
         uid = req_json.get('sender').get('user_id')
-        message = req_json.get('raw_message')
         logger.info(f"[qq]私聊-{uid}:{message}")
         msg_text = aichat.chat(uid, message, 'qq')  # 将消息转发给AI处理
         send_private(uid, msg_text)
     elif req_json.get('message_type') == 'group':         # 群消息
         gid = req_json.get('group_id')                    # 群号
         uid = req_json.get('sender').get('user_id')
-        message = req_json.get('raw_message')
         logger.info(f"[qq]群聊-{uid}:{message}")
-        if at_qq in message or at_nickname in message:    # 被@时才回答
-            message = message.replace(at_qq, "", 1)
-            message = message.replace(at_nickname, "", 1)
-            message = message.strip()
+        _speech = re.findall(speech_pattern, message)
+        if at_qq in message or at_nickname in message or _speech:    # 被@时才回答
+            if _speech:
+                message = speech_recog.get_speech_text(_speech[0])
+            else:
+                message = message.replace(at_qq, "", 1)
+                message = message.replace(at_nickname, "", 1)
+                message = message.strip()
             if group_session and message[0] != "画":
                 if message[0] != "#":
                     message = f"[用户{uid}]说:" + message
