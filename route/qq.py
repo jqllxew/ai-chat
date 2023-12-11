@@ -15,7 +15,9 @@ cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
 at_qq = f"[CQ:at,qq={qq_conf['uid']}]"
 at_nickname = f"@{qq_conf['nickname']}"
 group_session = qq_conf['group-session']
+private_white_list = qq_conf['private-white-list']
 speech_pattern = "\\[CQ:.*file=(.+?\\.amr).*"
+
 
 @qq_api.route('/', methods=['POST'])
 def receive():
@@ -23,9 +25,10 @@ def receive():
     message = req_json.get('raw_message')
     if req_json.get('message_type') == 'private':         # 私聊信息
         uid = req_json.get('sender').get('user_id')
-        logger.info(f"[qq]私聊-{uid}:{message}")
-        msg_text = aichat.chat(uid, message, 'qq')  # 将消息转发给AI处理
-        send_private(uid, msg_text)
+        if private_white_list and uid in private_white_list or not private_white_list:
+            logger.info(f"[qq]私聊-{uid}:{message}")
+            msg_text = aichat.chat(uid, message, 'qq')  # 将消息转发给AI处理
+            send_private(uid, msg_text)
     elif req_json.get('message_type') == 'group':         # 群消息
         gid = req_json.get('group_id')                    # 群号
         uid = req_json.get('sender').get('user_id')

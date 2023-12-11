@@ -64,6 +64,8 @@ qq:
   nickname:
   # 群聊时使用相同会话上下文
   group-session: true
+  # 私聊白名单
+  private-white-list:
 wx:
   # 昵称
   nickname:
