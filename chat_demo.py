@@ -1,6 +1,8 @@
 import logging
 
-from aichat import ChatGPT, ChatSpark
+import torch
+
+from aichat import ChatGPT, ChatSpark, Yi6b
 from config import chat as chat_conf, display
 from logger import logger
 
@@ -51,10 +53,22 @@ serious,sad,disgust,jealousy,embarrassed,happy,fear,surprise,neutral,frustrated,
     return gpt
 
 
+def create_yi():
+    yi_conf = chat_conf['yi']['yi-6b-chat']
+    return Yi6b(
+        uid="test_yi",
+        from_type="test",
+        model_id=yi_conf["model-id"],
+        max_tokens=yi_conf["max-tokens"],
+        max_resp_tokens=yi_conf["max-resp-tokens"]
+    )
+
+
 if __name__ == "__main__":
-    ai = gpt_living()
+    # ai = gpt_living()
     # ai = create_gpt()
     # ai = create_spark()
+    ai = create_yi()
     while True:
         lines = ""
         query = input("用户：")

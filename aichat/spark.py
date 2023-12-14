@@ -60,15 +60,6 @@ def gen_params(appid, domain, question):
     return data
 
 
-def message_generator(msg_queue):
-    try:
-        while True:
-            message = yield
-            msg_queue.put(message)
-    except GeneratorExit:
-        pass
-
-
 def queue_generator(ws, queue, timeout=10):
     then = time.time()
     while True:
@@ -157,9 +148,9 @@ class ChatSpark(ChatAI):
                                     on_open=on_open)
         prompt = self.get_prompt(query)
         message_queue = Queue()
-        message_gen = message_generator(message_queue)
-        next(message_gen)  # Start the generator
-        ws.on_message = lambda _ws, message: message_gen.send(message)
+        # message_gen = message_generator(message_queue)
+        # next(message_gen)  # Start the generator
+        ws.on_message = lambda _ws, message: message_queue.put(message)
         ws.appid = self.app_id
         ws.question = prompt
         ws.domain = self.domain

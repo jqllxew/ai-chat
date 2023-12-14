@@ -2,6 +2,7 @@ import hashlib
 import json
 import openai
 import tiktoken
+
 from aiimage.image_ai import replace_image
 from config import chat as chat_conf, display
 from logger import logger
@@ -13,35 +14,29 @@ _model_select = display(chat_conf['openai']['gpt']['model-select'])
 
 def _num_tokens_from_messages(messages, model="gpt-3.5-turbo") -> int:
     """Returns the number of tokens used by a list of messages."""
-    # try:
-        # encoding = tiktoken.encoding_for_model(model)
-    # except KeyError:
-        # encoding = tiktoken.get_encoding("cl100k_base")
-    if model in _model_select.keys():  # note: future models may deviate from this
-        num_tokens = 0
-        for message in messages:
-            num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-            for key, value in message.items():
-                if not isinstance(value, str):
-                    value = str(value)
-                # num_tokens += len(encoding.encode(value))
-
-                num_tokens += len(value)
-                if key == "name":  # if there's a name, the role is omitted
-                    num_tokens += -1  # role is always required and always 1 token
-        if num_tokens > 0:
-            num_tokens += 2  # every reply is primed with <im_start>assistant
-            num_tokens += int(num_tokens/5)
-        return num_tokens
-    else:
-        raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
-  See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        encoding = tiktoken.get_encoding("cl100k_base")
+    num_tokens = 0
+    for message in messages:
+        num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+        for key, value in message.items():
+            if not isinstance(value, str):
+                value = str(value)
+            num_tokens += len(encoding.encode(value))
+            if key == "name":  # if there's a name, the role is omitted
+                num_tokens += -1  # role is always required and always 1 token
+    if num_tokens > 0:
+        num_tokens += 2  # every reply is primed with <im_start>assistant
+    return num_tokens
 
 
 class OpenAI(ChatAI):
-    def __init__(self, api_key, proxy=None, model_id=None, **kw):
+    def __init__(self, api_key=None, proxy=None, model_id=None, **kw):
         super().__init__(**kw)
-        openai.api_key = api_key
+        if api_key:
+            openai.api_key = api_key
         openai.proxy = {
             'http': proxy,
             'https': proxy
@@ -111,7 +106,7 @@ class OpenAI(ChatAI):
 
 
 class ChatGPT(OpenAI):
-    def __init__(self, api_key, model_id=None, default_system=None, **kw):
+    def __init__(self, api_key=None, model_id=None, default_system=None, **kw):
         super().__init__(api_key=api_key, model_id=model_id or "gpt-3.5-turbo", **kw)
         if default_system:
             self.set_system(default_system)

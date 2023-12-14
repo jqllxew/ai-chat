@@ -54,6 +54,11 @@ chat:
       max-length: 2048
       top-p: 0.7
       temperature: 0.95
+  yi:
+      yi-6b-chat:
+        model-id: 01-ai/Yi-6b-Chat
+        max-tokens: 4096
+        max-resp-tokens: 512
 
 qq:
   # CQ-http地址
