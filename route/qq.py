@@ -83,7 +83,7 @@ def send_private(uid, message):
         msg_text = message
     # print(msg_text)
     res = requests.post(url=cq_http_url + "/send_private_msg",
-                        params={'user_id': int(uid), 'message': msg_text}).json()
+                        data={'user_id': int(uid), 'message': msg_text}).json()
     if res.get('status') != "ok":
         logger.warn(f"[qq]send_private err:{res}")
 
@@ -98,20 +98,20 @@ def send_group(gid, uid, message):
     else:
         msg_text = f"[CQ:at,qq={uid}]\n" + message
     res = requests.post(url=cq_http_url + "/send_group_msg",
-                        params={'group_id': int(gid), 'message': msg_text}).json()
+                        data={'group_id': int(gid), 'message': msg_text}).json()
     if res["status"] != "ok":
         logger.warn(f"[qq]send_group err:{res}")
 
 
 def handle_friend_add(flag, approve):
     res = requests.post(url=cq_http_url + "/set_friend_add_request",
-                        params={'flag': flag, 'approve': approve}).json()
+                        data={'flag': flag, 'approve': approve}).json()
     if res["status"] != "ok":
         logger.warn(f"[qq]handle_friend_add err:{res}")
 
 
 def handle_group_invite(flag, approve):
     res = requests.post(url=cq_http_url + "/set_group_add_request",
-                        params={'flag': flag, 'sub_type': 'invite', 'approve': approve}).json()
+                        data={'flag': flag, 'sub_type': 'invite', 'approve': approve}).json()
     if res["status"] != "ok":
         logger.warn(f"[qq]handle_group_invite err:{res}")
