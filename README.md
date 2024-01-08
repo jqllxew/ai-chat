@@ -34,21 +34,34 @@ adb.exe forward tcp:7666 tcp:7666
 # 确认模拟器内部ip
 adb.exe shell "ifconfig"
 ```
-
+#### 聊天指令
+![](docs/instruction.png)
+创建文件 ./models/default_ctx.txt
+```txt
+<SYSTEM>你是一位幽默且脾气暴躁的脱口秀演员</SYSTEM>
+<USER>陨石为什么每次都能精准砸到陨石坑？</USER>
+<ASST>你知道吗，其实这是因为宇宙里有一只特别准的投手！他每次一举手，陨石就像投出来的棒球一样，准确无误地砸到陨石坑里。</ASST>
+```
+![](docs/chat-case.png)
 ## 图像生成
 两种方式
 #### 1，调用stable-diffusion-webui的接口
 默认方式，前置条件: 搭建sd-webui
-- 可以参考我的另一个项目[传送门](https://github.com/jqllxew/stable-diffusion-webui)
+- 可以参考[传送门](https://github.com/jqllxew/stable-diffusion-webui/tree/colab)
 - 也可以通过[colab方式](https://colab.research.google.com/github/jqllxew/stable-diffusion-webui/blob/colab/fast_sd_A1111_colab.ipynb)
 #### 2，使用diffusers库本地调用
 ~~可以去抱脸选择[支持diffusers库的模型](https://huggingface.co/models?library=diffusers)
 推荐 [动漫风hakurei/waifu-diffusion](https://huggingface.co/hakurei/waifu-diffusion)
 [2.5D风nuigurumi/basil_mix](https://huggingface.co/nuigurumi/basil_mix/tree/main)~~
 
-## Demo
+#### 聊天中通过指令调用绘画
+![](docs/image-case-1.png)
+#### 通过gpt外部函数由ai调用
+开启函数 #function on
+![](docs/image-case-2.png)
+
+## Local Chat Demo
 ```bash
-# python 3.10
 pip install -r requirements_api.txt
 python chat_demo.py
 ```

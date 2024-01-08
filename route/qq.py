@@ -41,9 +41,8 @@ def receive():
                 message = message.replace(at_qq, "", 1)
                 message = message.replace(at_nickname, "", 1)
                 message = message.strip()
-            if group_session and message[0] != "画":
-                if message[0] != "#":
-                    message = f"[用户{uid}]说:" + message
+            if group_session and  message[0] != "#":
+                message = f"[用户{uid}]说:" + message
                 msg_text = aichat.chat(gid, message, 'qq')
             else:
                 msg_text = aichat.chat(uid, message, 'qq')

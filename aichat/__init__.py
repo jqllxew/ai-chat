@@ -74,7 +74,7 @@ def chat(uid: str, query: str, from_type: str):
     if not query:
         return "请说出您的问题哦~"
     elif query.find("#draw") == 0:
-        return aiimage.draw(uid, query[1:], from_type)
+        return aiimage.draw(uid, query[5:], from_type)
     elif query.find("#changechat") == 0:
         chat_type = query.replace("#changechat", "", 1).strip()
         err = u_change_model(uid, chat_type, from_type)

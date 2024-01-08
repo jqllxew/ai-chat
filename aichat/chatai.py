@@ -99,7 +99,11 @@ class ChatAI(ReplyAI, ABC):
                 return "欢迎使用\n目前有以下指令可供使用：" \
                        "\n[#清空]清空您的会话记录" \
                        "\n[#长度]统计您的会话轮数与总字符长度" \
-                       "\n[#add]添加会话记录上下文" \
+                       "\n[#changechat]切换聊天ai（可选glm/gpt/spark/yi）" \
+                       "\n[#changeimage]切换图像生成（可选diffusion/diffusers/dalle）" \
+                       "\n[#draw]绘画指令" \
+                       "\n[#ctx]导入聊天记录" \
+                       "\n[#add]上下文中添加用户消息" \
                        "\n[#del]删除会话记录上下文（可加入条数#del x，表示删除最近x条）"
             elif "#add" in query:
                 add_ctx = query.replace("#add", "", 1).strip()

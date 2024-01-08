@@ -94,7 +94,10 @@ class OpenAI(ChatAI):
         return res.choices[0].text
 
     def instruction(self, query, chat_type='gpt'):
-        if "#切换" in query:
+        if "#help" == query:
+            return super().instruction(query) + \
+                   "\n[#切换]切换模型（例gpt-4/gpt-3.5-turbo）"
+        elif "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
             try:
                 self.model_id = model_id
@@ -197,17 +200,22 @@ class ChatGPT(OpenAI):
         self.ctx.insert(0, {"role": "system", "content": text})
 
     def instruction(self, query, chat_type='gpt'):
-        if "#system" in query:
+        if "#help" == query:
+            return super().instruction(query) + \
+                   "\n[#system]设置助手角色&身份" \
+                   "\n[#function]开关gpt外部函数" \
+                   "\n[#addasst]向上下文中添加助手消息"
+        elif "#system" in query:
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)
-            return "设置成功"
+            return "セットアップ完了"
         elif "#function" in query:
             system_text = query.replace("#function", "", 1).strip()
             if system_text == "open" or system_text == "on":
                 self.enable_function = True
             else:
                 self.enable_function = False
-            return "设置成功"
+            return "セットアップ完了"
         elif "#delfirst" in query:
             if self.ctx[0].get('role') == "system":
                 self.ctx.pop(1)
