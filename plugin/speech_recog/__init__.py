@@ -27,7 +27,7 @@ def _upload(local_path):
         return tx_cos.upload(f"{store_dir}/{local_path}", _voice)
 
 
-def get_speech_text(file_path):
+def get_speech_text(file_path, c=None):
     file_path = _upload(file_path)
     if not file_path:
         return ""

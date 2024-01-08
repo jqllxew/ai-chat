@@ -1,3 +1,4 @@
+from aiimage.dallE import DallE
 from aiimage.diffusion import Diffusion
 from aiimage.image_ai import ImageAI
 from config import image as image_conf, display
@@ -17,6 +18,8 @@ def u_change_model(uid, image_type='', from_type=None, model_id=None):
         user_models[uid] = Diffusers(
             uid=uid, from_type=from_type,
             model_id=model_id or display(image_conf['diffusers']['model-id']))
+    elif 'dalle' == image_type:
+        user_models[uid] = DallE(uid=uid, from_type=from_type, model_id=model_id or "dall-e-3")
     else:
         return f"未找到 {image_type}"
 
@@ -27,7 +30,7 @@ def u_model(uid, from_type=None) -> ImageAI:
     return user_models.get(uid)
 
 
-def draw(uid: str, query: str, from_type: str) -> str:
+def draw(uid: str, query: str, from_type: str, use_template=True) -> str:
     reply = u_model(uid, from_type).reply(query)
     if reply.err:
         image = reply.err
@@ -37,8 +40,8 @@ def draw(uid: str, query: str, from_type: str) -> str:
         image = f"[image={reply.image}]"
     else:
         image = reply.image
-    template = display(image_conf['reply-template'])
-    if template:
+    if use_template:
+        template = display(image_conf['reply-template'])
         try:
             return template.format(
                 prompt=reply.prompt, neg_prompt=reply.neg_prompt or "默认",
@@ -46,8 +49,7 @@ def draw(uid: str, query: str, from_type: str) -> str:
                 size=reply.size, image=image)
         except Exception as e:
             logger.error(f"[aiimage]reply-template模板错误\nerr:{e}")
-    reply.image = image
-    return str(reply.to_dict())
+    return image
 
 
 __all__ = [

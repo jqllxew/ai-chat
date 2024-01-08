@@ -162,7 +162,7 @@ class ChatGPT(OpenAI):
                 function_name = response_message["function_call"]["name"]
                 function_to_call = GptFunction.function_map[function_name]
                 function_args = json.loads(response_message["function_call"]["arguments"])
-                function_response = function_to_call(function_args.get(GptFunction.param_name))
+                function_response = function_to_call(function_args.get(GptFunction.param_name), self)
                 # Step 4: send the info on the function call and function response to GPT
                 self.ctx.append(response_message)  # extend conversation with assistant's reply
                 self.ctx.append(

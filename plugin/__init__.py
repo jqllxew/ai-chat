@@ -1,22 +1,30 @@
 from datetime import datetime, timedelta, timezone
 
+import aiimage
+from ai import ReplyAI
 from plugin import image_recog
 from plugin import speech_recog
-
-def get_current_time(val0=0) -> str:
-    utc_offset = timedelta(hours=val0)
-    utc_time = datetime.now(tz=timezone.utc) + utc_offset
-    utc_time.timetz()
-    return utc_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class GptFunction:
 
+    @staticmethod
+    def get_current_time(val0=0, c=...) -> str:
+        utc_offset = timedelta(hours=val0)
+        utc_time = datetime.now(tz=timezone.utc) + utc_offset
+        utc_time.timetz()
+        return utc_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    @staticmethod
+    def image_generate(val0, c: ReplyAI):
+        return aiimage.draw(c.uid, val0, c.from_type, use_template=False)
+
     param_name = "val0"
     function_map = {
         "get_current_time": get_current_time,
-        "get_image_tag": image_recog.get_tag,
-        "get_image_character": image_recog.get_character,
+        "image_generate": image_generate,
+        # "get_image_tag": image_recog.get_tag,
+        # "get_image_character": image_recog.get_character,
         # "get_speech_text": speech_recog.get_speech_text,
     }
     functions = [
@@ -34,31 +42,44 @@ class GptFunction:
             }
         },
         {
-            "name": "get_image_tag",
-            "description": "传入图片url获取图片打标信息，返回格式{标签:置信度}",
+            "name": "image_generate",
+            "description": "传入prompt返回图像(可包含大小，例: 'a white siamese cat, 576x576')",
             "parameters": {
                 "type": "object",
                 "properties": {
                     param_name: {
                         "type": "string",
-                        "description": "图片url",
+                        "description": "prompt,only use english",
                     },
                 }, "required": [param_name],
             }
         },
-        {
-            "name": "get_image_character",
-            "description": "传入图片url获取图片中的文字内容",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    param_name: {
-                        "type": "string",
-                        "description": "图片url",
-                    },
-                }, "required": [param_name],
-            }
-        },
+        # {
+        #     "name": "get_image_tag",
+        #     "description": "传入图片url获取图片打标信息，返回格式{标签:置信度}",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             param_name: {
+        #                 "type": "string",
+        #                 "description": "图片url",
+        #             },
+        #         }, "required": [param_name],
+        #     }
+        # },
+        # {
+        #     "name": "get_image_character",
+        #     "description": "传入图片url获取图片中的文字内容",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             param_name: {
+        #                 "type": "string",
+        #                 "description": "图片url",
+        #             },
+        #         }, "required": [param_name],
+        #     }
+        # },
         # {
         #     "name": "get_speech_text",
         #     "description": "传入音频返回识别的文本信息",
