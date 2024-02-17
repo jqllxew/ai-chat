@@ -64,22 +64,38 @@ def create_yi():
     )
 
 
+def create_glm():
+    _conf = chat_conf['thudm']['glm']
+    from aichat.glm import ChatGLM
+    return ChatGLM(
+        uid="test_glm",
+        from_type="test",
+        model_id=_conf["model-id"],
+        max_length=_conf["max-length"],
+        quantize=_conf["quantize"]
+    )
+
+
 if __name__ == "__main__":
     # ai = gpt_living()
     # ai = create_gpt()
     # ai = create_spark()
-    ai = create_yi()
+    # ai = create_yi()
+    ai = create_glm()
     while True:
         lines = ""
         query = input("用户：")
         if query == "exit":
             print("bye")
             break
-        print("AI：", end="")
         reply = ai.reply_stream(query)
+        # print("AI：", end="")
+        # for x in reply:
+        #     print(x, end="")
+        #     lines += x
         for x in reply:
-            print(x, end="")
-            lines += x
+            print("\rAI：" + x, end='', flush=True)
+            lines = x
         print("\n")
         # sudo apt install portaudio19-dev
         # pip install pyaudio

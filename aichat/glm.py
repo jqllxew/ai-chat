@@ -28,24 +28,14 @@ class ChatGLM(ChatAI):
             model = model.eval()
 
     def set_system(self, system_text):
-        self.append_ctx(query=system_text)
-        self.append_ctx(reply="我知道了")
+        self.ctx.insert(0, {"role": "system", "content": system_text})
 
     def append_ctx(self, query=None, reply=None):
-        if query:
-            self.ctx.append([query])
-        if reply:
-            for x in self.ctx:
-                if isinstance(x, list) and len(x) == 1:
-                    x.append(reply)
-                    break
+        query and self.ctx.append({"role": "user", "content": query})
+        reply and self.ctx.append({"role": "assistant", "content": reply})
 
     def get_prompt_len(self, prompt):
-        total_word_count = 0
-        for x in prompt:
-            for msg in x:
-                total_word_count += len(msg)
-        return total_word_count
+        return sum(len(x["content"]) for x in prompt)
 
     def get_prompt(self, query=""):
         self.append_ctx(query)
@@ -54,15 +44,19 @@ class ChatGLM(ChatAI):
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
                         f"{self.get_prompt_len(prompt)} > {self.max_length}")
             if len(self.ctx) > 1:
-                self.ctx.pop(0)
+                if isinstance(self.ctx[0], dict) and self.ctx[0].get('role') == "system":
+                    if len(self.ctx) == 2:
+                        raise RuntimeError("prompt text too long")
+                    self.ctx.pop(1)
+                else:
+                    self.ctx.pop(0)
             else:
                 raise RuntimeError("prompt text too long")
-            prompt = self.join_ctx()
-        return prompt
+        return self.ctx
 
     def generate(self, query, jl, stream=False):
         global model, tokenizer
-        history = [(x[0], x[1]) for x in self.get_prompt() if isinstance(x, list) and len(x) == 2]
+        history = [x for x in self.get_prompt()]
         prompt = self.get_prompt(query)
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
@@ -84,3 +78,10 @@ class ChatGLM(ChatAI):
         finally:
             torch.cuda.empty_cache()
             torch.cuda.ipc_collect()
+
+    def instruction(self, query, _help=...):
+        if "#system" in query:
+            system_text = query.replace("#system", "", 1).strip()
+            self.set_system(system_text)
+            return "セットアップ完了"
+        return super().instruction(query, _help)

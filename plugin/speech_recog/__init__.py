@@ -16,6 +16,29 @@ voices_base_path = recog_conf['voices-base-path']
 access_key_id = recog_conf['aliyun']['access-key-id']
 access_key_secret = recog_conf['aliyun']['access-key-secret']
 app_key = recog_conf['aliyun']['app-key']
+# 地域ID，固定值。
+REGION_ID = "cn-shanghai"
+PRODUCT = "nls-filetrans"
+DOMAIN = "filetrans.cn-shanghai.aliyuncs.com"
+API_VERSION = "2018-08-17"
+POST_REQUEST_ACTION = "SubmitTask"
+GET_REQUEST_ACTION = "GetTaskResult"
+# 请求参数
+KEY_APP_KEY = "appkey"
+KEY_FILE_LINK = "file_link"
+KEY_VERSION = "version"
+KEY_ENABLE_WORDS = "enable_words"
+# 是否开启智能分轨
+KEY_AUTO_SPLIT = "auto_split"
+# 响应参数
+KEY_TASK = "Task"
+KEY_TASK_ID = "TaskId"
+KEY_STATUS_TEXT = "StatusText"
+KEY_RESULT = "Result"
+# 状态值
+STATUS_SUCCESS = "SUCCESS"
+STATUS_RUNNING = "RUNNING"
+STATUS_QUEUEING = "QUEUEING"
 
 
 def _upload(local_path):
@@ -27,33 +50,11 @@ def _upload(local_path):
         return tx_cos.upload(f"{store_dir}/{local_path}", _voice)
 
 
-def get_speech_text(file_path, c=None):
-    file_path = _upload(file_path)
+def get_speech_text(local_path=None, file_path=None, c=None):
+    if local_path:
+        file_path = _upload(local_path)
     if not file_path:
         return ""
-    # 地域ID，固定值。
-    REGION_ID = "cn-shanghai"
-    PRODUCT = "nls-filetrans"
-    DOMAIN = "filetrans.cn-shanghai.aliyuncs.com"
-    API_VERSION = "2018-08-17"
-    POST_REQUEST_ACTION = "SubmitTask"
-    GET_REQUEST_ACTION = "GetTaskResult"
-    # 请求参数
-    KEY_APP_KEY = "appkey"
-    KEY_FILE_LINK = "file_link"
-    KEY_VERSION = "version"
-    KEY_ENABLE_WORDS = "enable_words"
-    # 是否开启智能分轨
-    KEY_AUTO_SPLIT = "auto_split"
-    # 响应参数
-    KEY_TASK = "Task"
-    KEY_TASK_ID = "TaskId"
-    KEY_STATUS_TEXT = "StatusText"
-    KEY_RESULT = "Result"
-    # 状态值
-    STATUS_SUCCESS = "SUCCESS"
-    STATUS_RUNNING = "RUNNING"
-    STATUS_QUEUEING = "QUEUEING"
     # 创建AcsClient实例
     client = AcsClient(access_key_id, access_key_secret, REGION_ID)
     # 提交录音文件识别请求
@@ -74,13 +75,12 @@ def get_speech_text(file_path, c=None):
     try :
         postResponse = client.do_action_with_exception(postRequest)
         postResponse = json.loads(postResponse)
-        print (postResponse)
         statusText = postResponse[KEY_STATUS_TEXT]
         if statusText == STATUS_SUCCESS :
-            print ("录音文件识别请求成功响应！")
+            print("录音文件识别请求成功响应！")
             taskId = postResponse[KEY_TASK_ID]
         else :
-            print ("录音文件识别请求失败！")
+            print("录音文件识别请求失败！")
             return
     except ServerException as e:
         print (e)
@@ -101,7 +101,6 @@ def get_speech_text(file_path, c=None):
         try :
             getResponse = client.do_action_with_exception(getRequest)
             getResponse = json.loads(getResponse)
-            print (getResponse)
             statusText = getResponse[KEY_STATUS_TEXT]
             if statusText == STATUS_RUNNING or statusText == STATUS_QUEUEING :
                 # 继续轮询
@@ -113,16 +112,15 @@ def get_speech_text(file_path, c=None):
             print (e)
         except ClientException as e:
             print (e)
-    if statusText == STATUS_SUCCESS :
+    if statusText == STATUS_SUCCESS:
         print("录音文件识别成功！")
         return getResponse[KEY_RESULT]['Sentences'][0]['Text']
-    else :
+    else:
         return ""
 
 
 if __name__ == "__main__":
-    # fileLink = "https://gw.alipayobjects.com/os/bmw-prod/0574ee2e-f494-45a5-820f-63aee583045a.wav"
-    fileLink = "bbbe4c66631e78b2f390de8ba25dd915.amr"
+    fileLink = "https://gw.alipayobjects.com/os/bmw-prod/0574ee2e-f494-45a5-820f-63aee583045a.wav"
     # 执行录音文件识别
-    res = get_speech_text(fileLink)
+    res = get_speech_text(file_path=fileLink)
     print(res)

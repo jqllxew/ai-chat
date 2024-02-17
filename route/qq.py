@@ -1,4 +1,6 @@
+import os
 import re
+import time
 
 import requests
 from flask import request, Blueprint
@@ -16,39 +18,42 @@ at_qq = f"[CQ:at,qq={qq_conf['uid']}]"
 at_nickname = f"@{qq_conf['nickname']}"
 group_session = qq_conf['group-session']
 private_white_list = qq_conf['private-white-list']
-speech_pattern = "\\[CQ:.*file=(.+?\\.amr).*"
+speech_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1"
 
 
 @qq_api.route('/', methods=['POST'])
 def receive():
     req_json = request.get_json()
     message = req_json.get('raw_message')
-    if req_json.get('message_type') == 'private':         # 私聊信息
+    _speech = re.findall(speech_pattern, message)
+    if req_json.get('message_type') == 'private':  # 私聊信息
         uid = req_json.get('sender').get('user_id')
         if private_white_list and uid in private_white_list or not private_white_list:
+            if _speech:
+                message = speech_recog.get_speech_text(get_record(_speech[0]))
             logger.info(f"[qq]私聊-{uid}:{message}")
             msg_text = aichat.chat(uid, message, 'qq')  # 将消息转发给AI处理
             send_private(uid, msg_text)
-    elif req_json.get('message_type') == 'group':         # 群消息
-        gid = req_json.get('group_id')                    # 群号
+    elif req_json.get('message_type') == 'group':  # 群消息
+        gid = req_json.get('group_id')  # 群号
         uid = req_json.get('sender').get('user_id')
         logger.info(f"[qq]群聊-{uid}:{message}")
-        _speech = re.findall(speech_pattern, message)
-        if at_qq in message or at_nickname in message or _speech:    # 被@时才回答
+        if at_qq in message or at_nickname in message or _speech:  # 被@时才回答
             if _speech:
-                message = speech_recog.get_speech_text(_speech[0])
+                message = speech_recog.get_speech_text(get_record(_speech[0]))
             else:
                 message = message.replace(at_qq, "", 1)
                 message = message.replace(at_nickname, "", 1)
                 message = message.strip()
-            if group_session and  message[0] != "#":
+            _id = gid if group_session else uid
+            if message[0] != "#":
                 message = f"[用户{uid}]说:" + message
-                msg_text = aichat.chat(gid, message, 'qq')
+                msg_text = aichat.chat(_id, message, 'qq')
             else:
-                msg_text = aichat.chat(uid, message, 'qq')
+                msg_text = aichat.chat(_id, message, 'qq')
             send_group(gid, uid, msg_text)
     if req_json.get('post_type') == 'request':
-        request_type = req_json.get('request_type')       # group
+        request_type = req_json.get('request_type')  # group
         uid = req_json.get('user_id')
         flag = req_json.get('flag')
         comment = req_json.get('comment')
@@ -74,13 +79,12 @@ def _find_ssml(text):
 def send_private(uid, message):
     ssml = _find_ssml(message)
     if ssml:
-        if len(ssml) < 160:
+        if len(ssml) < 127:
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
     else:
         msg_text = message
-    # print(msg_text)
     res = requests.post(url=cq_http_url + "/send_private_msg",
                         data={'user_id': int(uid), 'message': msg_text}).json()
     if res.get('status') != "ok":
@@ -90,7 +94,7 @@ def send_private(uid, message):
 def send_group(gid, uid, message):
     ssml = _find_ssml(message)
     if ssml:
-        if len(ssml) < 160:
+        if len(ssml) < 127:
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
@@ -114,3 +118,27 @@ def handle_group_invite(flag, approve):
                         data={'flag': flag, 'sub_type': 'invite', 'approve': approve}).json()
     if res["status"] != "ok":
         logger.warn(f"[qq]handle_group_invite err:{res}")
+
+
+def get_record(file_md5):
+    err_num = 0
+    while True:
+        res = requests.get(url=cq_http_url + "/get_record",
+                           params={'file': file_md5, 'out_format': 'amr'}).json()
+        if res["status"] == "ok":
+            break
+        if "not found" not in res.get('data', {}).get('error', '') or err_num > 3:
+            return None
+        err_num += 1
+        logger.warn(f"[qq]get_record retry {err_num}")
+        time.sleep(1)
+    file_url = res['data']['url']
+    download_url = cq_http_url+file_url
+    local_path = speech_recog.voices_base_path+file_url
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    download_res = requests.get(download_url)
+    if download_res.status_code == 200:
+        with open(local_path, 'wb') as f:
+            f.write(download_res.content)
+            return file_url
+    return None

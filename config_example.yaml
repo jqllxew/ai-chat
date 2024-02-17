@@ -49,16 +49,16 @@ chat:
           max-length: 8000
   thudm:
     glm:
-      model-id: THUDM/chatglm2-6b-int4 # or local path
+      model-id: THUDM/chatglm3-6b # or local path
       quantize: 0
       max-length: 2048
       top-p: 0.7
       temperature: 0.95
   yi:
-      yi-6b-chat:
-        model-id: 01-ai/Yi-6b-Chat
-        max-tokens: 4096
-        max-resp-tokens: 512
+    yi-6b-chat:
+      model-id: 01-ai/Yi-6b-Chat
+      max-tokens: 4096
+      max-resp-tokens: 512
 
 qq:
   # CQ-http地址
