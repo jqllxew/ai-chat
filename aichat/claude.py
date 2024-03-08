@@ -4,6 +4,7 @@ from anthropic.types import ContentBlock
 import journal
 from aichat.gpt import ChatGPT
 from config import chat as chat_conf, display
+from logger import logger
 
 _model_select = display(chat_conf['anthropic']['claude']['model-select'])
 _api_key = display(chat_conf['anthropic']['claude']['api-key'])
@@ -44,6 +45,18 @@ class ChatClaude(ChatGPT):
         )
         if len(message.content) and isinstance(message.content[0], ContentBlock):
             return message.content[0].text
+
+    def get_prompt(self, query=""):
+        self.append_ctx(query)
+        while self.get_prompt_len(self.ctx) > self.max_req_tokens:
+            logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
+                        f"{self.get_prompt_len(self.ctx)} > {self.max_req_tokens}")
+            if len(self.ctx) > 1:
+                self.ctx.pop()
+                self.ctx.pop()
+            else:
+                raise RuntimeError("prompt text too long")
+        return self.ctx
 
     def generate(self, query: str, jl: journal.Journal, stream=False):
         prompt = self.get_prompt(query)
