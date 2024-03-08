@@ -1,7 +1,8 @@
 import aiimage
 from config import chat as chat_conf, display
 from .chatai import ChatAI
-from .gpt import OpenAI, ChatGPT
+from .claude import ChatClaude
+from .gpt import ChatGPT
 from .spark import ChatSpark
 from .yi6b import Yi6b
 
@@ -11,16 +12,22 @@ user_models: dict[str, ChatAI] = {}
 def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_ins=True, model_id=None) -> str:
     if 'gpt' == chat_type or 'chatgpt' == chat_type:
         if not isinstance(user_models.get(uid), ChatGPT):
-            gpt_conf = chat_conf['openai']['gpt']
             user_models[uid] = ChatGPT(
                 uid=uid,
-                api_key=display(gpt_conf['api-key']),
-                proxy=display(gpt_conf['proxy']),
-                default_system=display(gpt_conf['default-system']),
+                default_system=display(chat_conf['openai']['gpt']['default-system']),
                 from_type=from_type,
-                model_id=model_id,
                 enable_ctx=enable_ctx,
-                enable_ins=enable_ins)
+                enable_ins=enable_ins
+            )
+    elif 'claude' == chat_type:
+        if not isinstance(user_models.get(uid), ChatClaude):
+            user_models[uid] = ChatClaude(
+                uid=uid,
+                default_system=display(chat_conf['anthropic']['claude']['default-system']),
+                from_type=from_type,
+                enable_ctx=enable_ctx,
+                enable_ins=enable_ins
+            )
     elif 'glm' == chat_type:
         from .glm import ChatGLM
         if not isinstance(user_models.get(uid), ChatGLM):
@@ -91,7 +98,7 @@ __all__ = [
     "chat",
     "u_model",
     "ChatAI",
-    "OpenAI",
+    "ChatClaude",
     "ChatGPT",
     "ChatSpark",
     "Yi6b"

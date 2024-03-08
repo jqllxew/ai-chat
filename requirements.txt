@@ -20,3 +20,4 @@ alibabacloud_ocr20191230
 websocket_client
 aliyun-python-sdk-core==2.13.3
 tiktoken
+anthropic

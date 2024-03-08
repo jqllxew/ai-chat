@@ -25,10 +25,10 @@ speech_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1"
 def receive():
     req_json = request.get_json()
     message = req_json.get('raw_message')
-    _speech = re.findall(speech_pattern, message)
+    _speech = re.findall(speech_pattern, message) if message else None
     if req_json.get('message_type') == 'private':  # 私聊信息
         uid = req_json.get('sender').get('user_id')
-        if private_white_list and uid in private_white_list or not private_white_list:
+        if (private_white_list and uid in private_white_list) or not private_white_list:
             if _speech:
                 message = speech_recog.get_speech_text(get_record(_speech[0]))
             logger.info(f"[qq]私聊-{uid}:{message}")
@@ -121,6 +121,9 @@ def handle_group_invite(flag, approve):
 
 
 def get_record(file_md5):
+    """
+    获取语音
+    """
     err_num = 0
     while True:
         res = requests.get(url=cq_http_url + "/get_record",

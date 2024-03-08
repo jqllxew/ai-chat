@@ -19,14 +19,8 @@
 - 此时 Shamrock 会显示已激活
 #### 转发端口
 ```bash
-# 确认模拟器adb调试端口
-adb.exe connect 127.0.0.1:16384
-# shamrock 主动http端口
-adb.exe forward tcp:5700 tcp:5700
-# 尝试ping通内网
-adb.exe shell "ping 192.168.0.1"
-# 不通就再转发回调端口
-adb.exe forward tcp:7666 tcp:7666
+# 确认模拟器adb调试端口 & shamrock 主动http端口
+adb connect 127.0.0.1:16384 & adb forward tcp:5700 tcp:5700
 ```
 #### 配置Shamrock
 设置回调，如果能ping通内网就用内网ip，不能就用内部ip

@@ -24,6 +24,9 @@ class Yi6b(ChatGPT):
         self.max_resp_tokens = max_resp_tokens
         self.max_req_tokens = max_tokens - max_resp_tokens
 
+    def get_prompt_len(self, prompt):
+        return sum(len(tokenizer.tokenize(x.get("content"))) for x in prompt)
+
     def generate(self, query: str, jl: journal.Journal, stream=False):
         prompt = self.get_prompt(query)
         jl.prompt_len = self.get_prompt_len(prompt)

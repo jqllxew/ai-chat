@@ -1,20 +1,24 @@
 import logging
 
-import torch
-
-from aichat import ChatGPT, ChatSpark, Yi6b
+from aichat import ChatGPT, ChatSpark, Yi6b, ChatAI, ChatClaude
 from config import chat as chat_conf, display
 from logger import logger
+from plugin.tts import speak
 
 logger.setLevel(logging.ERROR)
 
 
 def create_gpt():
-    gpt_conf = chat_conf['openai']['gpt']
     return ChatGPT(
         uid="test_gpt",
-        api_key=display(gpt_conf['api-key']),
-        proxy=display(gpt_conf['proxy']),
+        from_type="test",
+        enable_ins=True,
+    )
+
+
+def create_claude():
+    return ChatClaude(
+        uid="test_claude",
         from_type="test",
         enable_ins=True,
     )
@@ -76,27 +80,47 @@ def create_glm():
     )
 
 
-if __name__ == "__main__":
-    # ai = gpt_living()
-    # ai = create_gpt()
-    # ai = create_spark()
-    # ai = create_yi()
+def glm_main():
     ai = create_glm()
+    while True:
+        query = input("用户：")
+        if query == "exit":
+            print("bye")
+            break
+        reply = ai.reply_stream(query)
+        for x in reply:
+            print("\rAI：" + x, end='', flush=True)
+        print("\n")
+
+
+def main(chat_ai: ChatAI, tts=False):
     while True:
         lines = ""
         query = input("用户：")
         if query == "exit":
             print("bye")
             break
-        reply = ai.reply_stream(query)
-        # print("AI：", end="")
-        # for x in reply:
-        #     print(x, end="")
-        #     lines += x
+        reply = chat_ai.reply_stream(query)
+        print("AI：", end="")
         for x in reply:
-            print("\rAI：" + x, end='', flush=True)
-            lines = x
+            print(x, end="")
+            lines += x
         print("\n")
         # sudo apt install portaudio19-dev
         # pip install pyaudio
-        # speak(lines)
+        if tts:
+            speak(lines)
+
+
+def living_main():
+    main(gpt_living(), True)
+
+
+if __name__ == "__main__":
+    # glm_main()
+    # living_main()
+
+    # main(create_gpt())
+    main(create_claude())
+    # main(create_spark())
+    # main(create_yi())

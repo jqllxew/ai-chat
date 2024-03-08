@@ -1,7 +1,7 @@
 import hashlib
 import json
+
 import openai
-import tiktoken
 
 from aiimage.image_ai import replace_image
 from config import chat as chat_conf, display
@@ -10,124 +10,46 @@ from plugin import GptFunction
 from .chatai import ChatAI
 
 _model_select = display(chat_conf['openai']['gpt']['model-select'])
+_api_key = display(chat_conf['openai']['gpt']['api-key'])
+_api_proxy = display(chat_conf['openai']['gpt']['proxy'])
+openai.api_key = _api_key
+openai.proxy = {
+    'http': _api_proxy,
+    'https': _api_proxy
+} if _api_proxy else None
 
 
-def _num_tokens_from_messages(messages, model="gpt-3.5-turbo") -> int:
-    """Returns the number of tokens used by a list of messages."""
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        encoding = tiktoken.get_encoding("cl100k_base")
-    num_tokens = 0
-    for message in messages:
-        num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-        for key, value in message.items():
-            if not isinstance(value, str):
-                value = str(value)
-            num_tokens += len(encoding.encode(value))
-            if key == "name":  # if there's a name, the role is omitted
-                num_tokens += -1  # role is always required and always 1 token
-    if num_tokens > 0:
-        num_tokens += 2  # every reply is primed with <im_start>assistant
-    return num_tokens
-
-
-class OpenAI(ChatAI):
-    def __init__(self, api_key=None, proxy=None, model_id=None, **kw):
-        super().__init__(**kw)
-        if api_key:
-            openai.api_key = api_key
-        openai.proxy = {
-            'http': proxy,
-            'https': proxy
-        } if proxy else None
-        self.model_id = model_id or "text-davinci-003"
+class ChatGPT(ChatAI):
+    def __init__(self, model_id="gpt-3.5-turbo", default_system=None, model_select=None, **kw):
+        super().__init__(model_id=model_id, **kw)
+        self.model_id = None
         self.max_req_tokens = None
         self.max_resp_tokens = None
-        self.set_model_attr()
-
-    def set_model_attr(self):
-        model_attrs = _model_select.get(self.model_id)
-        if model_attrs is None:
-            raise NotImplementedError(f"未找到{self.model_id}")
-        max_tokens = model_attrs['max-tokens']
-        max_resp_tokens = model_attrs['max-resp-tokens']
-        self.max_resp_tokens = max_resp_tokens
-        self.max_req_tokens = max_tokens - max_resp_tokens
-
-    def set_system(self, system_text):
-        self.ctx.insert(0, system_text)
-
-    def join_ctx(self, sep="\n\n"):
-        return sep.join(self.ctx)
-
-    def get_prompt(self, query=""):
-        prompt = super().get_prompt(query)
-        while self.get_prompt_len(prompt) > self.max_req_tokens:
-            logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
-                        f"{self.get_prompt_len(prompt)} > {self.max_req_tokens}")
-            if len(self.ctx) > 1:
-                self.ctx.pop(0)
-            else:
-                raise RuntimeError("prompt text too long")
-            prompt = super().get_prompt()
-        return prompt
-
-    def generate(self, query, jl, stream=False):
-        prompt = self.get_prompt(query)
-        jl.prompt_len = self.get_prompt_len(prompt)
-        jl.before(query, prompt)
-        res = openai.Completion.create(
-            model=self.model_id,  # 对话模型的名称
-            prompt=prompt,
-            temperature=0.9,  # 值在[0,1]之间，越大表示回复越具有不确定性
-            # 回复最大的tokens，用达芬奇003来说需满足 prompt_tokens + max_tokens <= 4000
-            # 参考文档的MAX REQUEST https://beta.openai.com/docs/models/gpt-3
-            max_tokens=self.max_resp_tokens,
-            top_p=1,
-            frequency_penalty=0.0,
-            presence_penalty=0.6,
-            stop=["#"],
-            stream=stream)
-        if stream:
-            return (x.choices[0].text for x in res)
-        return res.choices[0].text
-
-    def instruction(self, query, chat_type='gpt'):
-        if "#help" == query:
-            return super().instruction(query) + \
-                   "\n[#切换]切换模型（例gpt-4/gpt-3.5-turbo）"
-        elif "#切换" in query:
-            model_id = query.replace("#切换", "", 1).strip()
-            try:
-                self.model_id = model_id
-                self.set_model_attr()
-                return f"[{self.uid}]已切换模型{model_id}"
-            except Exception as e:
-                return str(e)
-        return super().instruction(query)
-
-
-class ChatGPT(OpenAI):
-    def __init__(self, api_key=None, model_id=None, default_system=None, **kw):
-        super().__init__(api_key=api_key, model_id=model_id or "gpt-3.5-turbo", **kw)
-        if default_system:
-            self.set_system(default_system)
         self._cache_len = {}
         self.enable_function = False
+        self._model_select = model_select or _model_select
+        self.set_model_attr(model_id)
+        self.set_system(default_system)
+
+    def set_model_attr(self, model_id=None):
+        model_attrs = self._model_select.get(model_id)
+        if model_attrs is None:
+            raise NotImplementedError(f"未找到{model_id}")
+        max_tokens = model_attrs['max-tokens']
+        max_resp_tokens = model_attrs['max-resp-tokens']
+        self.model_id = model_id
+        self.max_resp_tokens = max_resp_tokens
+        self.max_req_tokens = max_tokens - max_resp_tokens
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})
         reply and self.ctx.append({"role": "assistant", "content": reply})
 
-    def join_ctx(self, sep=...):
-        return self.ctx
-
     def get_prompt_len(self, prompt):
         _hash = hashlib.md5(str(prompt).encode()).hexdigest()
         if self._cache_len.get('_hash') != _hash:
             self._cache_len['_hash'] = _hash
-            self._cache_len['_len'] = _num_tokens_from_messages(prompt, self.model_id)
+            self._cache_len['_len'] = self.num_tokens_from_messages(prompt, self.model_id)
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
@@ -184,7 +106,7 @@ class ChatGPT(OpenAI):
             messages=prompt,
             stream=stream,
             n=1,  # 默认为1,对一个提问生成多少个回答
-            temperature=1,  # 默认为1,0~2，数值越高创造性越强
+            temperature=1,  # 默认为1,0~2
             # top_p = 1,                # 默认为1,0~1，效果类似temperature，不建议都用
             # stop = '',                # 遇到stop停止生成内容
             # presence_penalty = 2,     # 默认为0,-2~2，越大越允许跑题
@@ -197,14 +119,22 @@ class ChatGPT(OpenAI):
         return res.choices[0]['message'].get('content')
 
     def set_system(self, text):
-        self.ctx.insert(0, {"role": "system", "content": text})
+        text and self.ctx.insert(0, {"role": "system", "content": text})
 
-    def instruction(self, query, chat_type='gpt'):
+    def instruction(self, query):
         if "#help" == query:
             return super().instruction(query) + \
+                   "\n[#切换]切换模型（例gpt-4/gpt-3.5-turbo）" \
                    "\n[#system]设置助手角色&身份" \
                    "\n[#function]开关gpt外部函数" \
                    "\n[#addasst]向上下文中添加助手消息"
+        elif "#切换" in query:
+            model_id = query.replace("#切换", "", 1).strip()
+            try:
+                self.set_model_attr(model_id)
+                return f"[{self.uid}]已切换模型{model_id}"
+            except Exception as e:
+                return str(e)
         elif "#system" in query:
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)
@@ -222,10 +152,10 @@ class ChatGPT(OpenAI):
             else:
                 self.ctx.pop(0)
             return "[{}]已删除前项，会话信息如下：\n总轮数为{}\n总字符(or tokens)长度为{}" \
-                    .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
+                .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
         elif "#addasst" in query:
             add_ctx = query.replace("#addasst", "", 1).strip()
             self.append_ctx(reply=add_ctx)
             return "[{}]已添加助手消息，会话信息如下：\n总轮数为{}\n总字符(or tokens)长度为{}" \
                 .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
-        return super().instruction(query, chat_type)
+        return super().instruction(query)

@@ -35,7 +35,7 @@ class ChatGLM(ChatAI):
         reply and self.ctx.append({"role": "assistant", "content": reply})
 
     def get_prompt_len(self, prompt):
-        return sum(len(x["content"]) for x in prompt)
+        return sum(len(tokenizer.tokenize(x.get("content"))) for x in prompt)
 
     def get_prompt(self, query=""):
         self.append_ctx(query)
@@ -79,9 +79,9 @@ class ChatGLM(ChatAI):
             torch.cuda.empty_cache()
             torch.cuda.ipc_collect()
 
-    def instruction(self, query, _help=...):
+    def instruction(self, query):
         if "#system" in query:
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)
             return "セットアップ完了"
-        return super().instruction(query, _help)
+        return super().instruction(query)

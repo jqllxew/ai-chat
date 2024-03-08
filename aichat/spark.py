@@ -179,9 +179,9 @@ class ChatSpark(ChatAI):
         return self.ctx
 
     def get_prompt_len(self, prompt):
-        return sum(len(x["content"]) for x in prompt)
+        return self.num_tokens_from_messages(prompt)
 
-    def instruction(self, query, _help=...):
+    def instruction(self, query):
         if "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
             try:

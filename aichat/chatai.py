@@ -2,8 +2,8 @@ import traceback
 from abc import ABC, abstractmethod
 
 from bs4 import BeautifulSoup
-
 import journal
+import tiktoken
 from ai import ReplyAI
 
 
@@ -34,6 +34,27 @@ class ChatAI(ReplyAI, ABC):
 
     def get_prompt_len(self, prompt):
         return len(prompt)
+
+    @staticmethod
+    def num_tokens_from_messages(messages, model = None) -> int:
+        """Returns the number of tokens used by a list of messages."""
+        try:
+            encoding = tiktoken.encoding_for_model(model or "cl100k_base")
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        num_tokens = 0
+        for message in messages:
+            num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+            for key, value in message.items():
+                if not isinstance(value, str):
+                    value = str(value)
+                ss = encoding.encode(value)
+                num_tokens += len(ss)
+                if key == "name":  # if there's a name, the role is omitted
+                    num_tokens += -1  # role is always required and always 1 token
+        if num_tokens > 0:
+            num_tokens += 2  # every reply is primed with <im_start>assistant
+        return num_tokens
 
     @abstractmethod
     def generate(self, query: str, jl: journal.Journal, stream=False):
@@ -91,11 +112,9 @@ class ChatAI(ReplyAI, ABC):
     def reply_stream(self, query: str, jl=None):
         return self.reply_text(query, True, jl)
 
-    def instruction(self, query, _help=...):
+    def instruction(self, query):
         if query[0] == "#":
             if query == "#help":
-                if callable(_help):
-                    return _help()
                 return "欢迎使用\n目前有以下指令可供使用：" \
                        "\n[#清空]清空您的会话记录" \
                        "\n[#长度]统计您的会话轮数与总字符长度" \
