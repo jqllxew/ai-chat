@@ -1,3 +1,5 @@
+from typing import Callable
+
 import torch
 from transformers import AutoTokenizer, AutoModel
 
@@ -34,8 +36,11 @@ class ChatGLM(ChatAI):
         query and self.ctx.append({"role": "user", "content": query})
         reply and self.ctx.append({"role": "assistant", "content": reply})
 
-    def get_prompt_len(self, prompt):
-        return sum(len(tokenizer.tokenize(x.get("content"))) for x in prompt)
+    def encode_len(self) -> Callable[[str], int]:
+        def tokenize(value: str) -> int:
+            return len(tokenizer.tokenize(value))
+
+        return tokenize
 
     def get_prompt(self, query=""):
         self.append_ctx(query)

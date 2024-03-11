@@ -16,8 +16,8 @@ chat:
         gpt-4:
           max-tokens: 8192
           max-resp-tokens: 768
-        gpt-4-32k:
-          max-tokens: 32768
+        gpt-4-vision-preview:
+          max-tokens: 8192
           max-resp-tokens: 768
       proxy: http://127.0.0.1:7890
       default-system:
@@ -69,6 +69,8 @@ qq:
   nickname:
   # 群聊时使用相同会话上下文
   group-session: true
+  # 回复群语音
+  group-speech-reply: true
   # 私聊白名单
   private-white-list:
 wx:

@@ -9,9 +9,9 @@ from .yi6b import Yi6b
 user_models: dict[str, ChatAI] = {}
 
 
-def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_ins=True, model_id=None) -> str:
+def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_ins=True) -> str:
     if 'gpt' == chat_type or 'chatgpt' == chat_type:
-        if not isinstance(user_models.get(uid), ChatGPT):
+        if type(user_models.get(uid)) is not ChatGPT:
             user_models[uid] = ChatGPT(
                 uid=uid,
                 default_system=display(chat_conf['openai']['gpt']['default-system']),
@@ -20,7 +20,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
                 enable_ins=enable_ins
             )
     elif 'claude' == chat_type:
-        if not isinstance(user_models.get(uid), ChatClaude):
+        if type(user_models.get(uid)) is not ChatClaude:
             user_models[uid] = ChatClaude(
                 uid=uid,
                 default_system=display(chat_conf['anthropic']['claude']['default-system']),
@@ -30,7 +30,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
             )
     elif 'glm' == chat_type:
         from .glm import ChatGLM
-        if not isinstance(user_models.get(uid), ChatGLM):
+        if type(user_models.get(uid)) is not ChatGLM:
             glm_conf = chat_conf['thudm']['glm']
             user_models[uid] = ChatGLM(
                 uid=uid,
@@ -43,7 +43,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
                 quantize=glm_conf['quantize'],
             )
     elif 'spark' == chat_type:
-        if not isinstance(user_models.get(uid), ChatSpark):
+        if type(user_models.get(uid)) is not ChatSpark:
             spark_conf = chat_conf['iflytek']['spark']
             user_models[uid] = ChatSpark(
                 uid=uid,
@@ -55,7 +55,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
                 api_key=spark_conf['api-key'],  # 填写控制台中获取的 APIKey 信息
             )
     elif 'yi' == chat_type:
-        if not isinstance(user_models.get(uid), Yi6b):
+        if type(user_models.get(uid)) is not Yi6b:
             yi_conf = chat_conf['yi']['yi-6b-chat']
             user_models[uid] = Yi6b(
                 uid=uid,
@@ -64,7 +64,6 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
                 model_id=yi_conf['model-id'],
                 max_tokens=yi_conf['max-tokens'],
                 max_resp_tokens=yi_conf['max-resp-tokens']
-
             )
     else:
         return f"未找到 {chat_type}"

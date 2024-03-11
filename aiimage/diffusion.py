@@ -3,12 +3,12 @@ import io
 import json
 import random
 from io import BytesIO
+
 import requests
 from PIL import Image
-from aiimage.image_ai import ImageAI, ImagePrompt
-from config import image as image_conf, display
-from abc import ABC
 
+from aiimage.image_ai import ImageAI
+from config import image as image_conf, display
 from journal import BaseDict
 from logger import logger
 

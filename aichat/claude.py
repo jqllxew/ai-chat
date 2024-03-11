@@ -1,9 +1,12 @@
+import base64
+import io
+
 import anthropic
 from anthropic._types import NOT_GIVEN
 from anthropic.types import ContentBlock
 import journal
 from aichat.gpt import ChatGPT
-from config import chat as chat_conf, display
+from config import chat as chat_conf, display, match_image
 from logger import logger
 
 _model_select = display(chat_conf['anthropic']['claude']['model-select'])
@@ -47,13 +50,31 @@ class ChatClaude(ChatGPT):
             return message.content[0].text
 
     def get_prompt(self, query=""):
+        images, query = match_image(query)
+        if len(images):
+            buffered = io.BytesIO()
+            images[0].save(buffered, format="JPEG")
+            # 获得字节流的内容
+            image_content = buffered.getvalue()
+            base64_image = base64.b64encode(image_content).decode("utf-8")
+            query = [{
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64_image
+                }
+            }, {
+                "type": "text",
+                "text": query
+            }]
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_req_tokens:
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
                         f"{self.get_prompt_len(self.ctx)} > {self.max_req_tokens}")
             if len(self.ctx) > 1:
-                self.ctx.pop()
-                self.ctx.pop()
+                self.ctx.pop(0)
+                self.ctx.pop(0)
             else:
                 raise RuntimeError("prompt text too long")
         return self.ctx

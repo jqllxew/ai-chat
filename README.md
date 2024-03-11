@@ -4,7 +4,7 @@
 - ~~[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)（已不再维护）~~
 - [OpenShamrock](https://github.com/whitechi73/OpenShamrock)（需要使用安卓环境）
 #### 模拟器中安装
-以下使用MuMu模拟器12，QQ 8.9.83
+以下使用MuMu模拟器12，QQ版本: 9.0.15，Shamrock: 1.0.8
 1. [Shizuku](https://github.com/RikkaApps/Shizuku)
 2. [LSPatch](https://github.com/LSPosed/LSPatch)
 3. [OpenShamrock](https://github.com/whitechi73/OpenShamrock)
@@ -22,11 +22,10 @@
 # 确认模拟器adb调试端口 & shamrock 主动http端口
 adb connect 127.0.0.1:16384 & adb forward tcp:5700 tcp:5700
 ```
-#### 配置Shamrock
-设置回调，如果能ping通内网就用内网ip，不能就用内部ip
+#### 配置Shamrock & [语音支持](https://whitechi73.github.io/OpenShamrock/advanced/voice.html)
 ```bash
-# 确认模拟器内部ip
-adb.exe shell "ifconfig"
+# github.com/whitechi73/OpenShamrock下载AudioLibrary-arm64.zip
+unzip AudioLibrary-arm64.zip & adb push ./ /storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/Shamrock/lib
 ```
 #### 聊天指令
 ![](docs/instruction.png)

@@ -1,5 +1,6 @@
 import traceback
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from bs4 import BeautifulSoup
 import journal
@@ -32,26 +33,45 @@ class ChatAI(ReplyAI, ABC):
             return self.join_ctx()
         return query
 
-    def get_prompt_len(self, prompt):
-        return len(prompt)
-
-    @staticmethod
-    def num_tokens_from_messages(messages, model = None) -> int:
-        """Returns the number of tokens used by a list of messages."""
+    def encode_len(self) -> Callable[[str], int]:
         try:
-            encoding = tiktoken.encoding_for_model(model or "cl100k_base")
+            encoding = tiktoken.encoding_for_model(self.model_id)
         except KeyError:
             encoding = tiktoken.get_encoding("cl100k_base")
-        num_tokens = 0
-        for message in messages:
-            num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-            for key, value in message.items():
-                if not isinstance(value, str):
-                    value = str(value)
-                ss = encoding.encode(value)
-                num_tokens += len(ss)
-                if key == "name":  # if there's a name, the role is omitted
-                    num_tokens += -1  # role is always required and always 1 token
+
+        def tiktoken_encode(value) -> int:
+            return len(encoding.encode(value))
+
+        return tiktoken_encode
+
+    def get_prompt_len(self, prompt):
+        """Returns the number of tokens used by a list of messages."""
+        encoder = self.encode_len()
+        if not callable(encoder):
+            raise RuntimeError("encode_len return is not function")
+
+        def count_tokens(value):
+            """Recursively count tokens in a value."""
+            if isinstance(value, str):
+                return encoder(value)
+            elif isinstance(value, list):
+                _num_tokens = 0
+                for item in value:
+                    _num_tokens += count_tokens(item)
+                return _num_tokens
+            elif isinstance(value, dict):
+                if "type" in value and value["type"] == "base64":
+                    return 0  # Ignore tokens for base64 content
+                _num_tokens = 0
+                for sub_value in value.values():
+                    _num_tokens += count_tokens(sub_value)
+                return _num_tokens
+            else:
+                # Handle other types, e.g., integers, floats, etc.
+                return 1
+
+        num_tokens = count_tokens(prompt)
+        num_tokens += len(prompt)*4 # every message follows <im_start>{role/name}\n{content}<im_end>\n
         if num_tokens > 0:
             num_tokens += 2  # every reply is primed with <im_start>assistant
         return num_tokens
@@ -119,7 +139,7 @@ class ChatAI(ReplyAI, ABC):
                        "\n[#清空]清空您的会话记录" \
                        "\n[#长度]统计您的会话轮数与总字符长度" \
                        "\n[#changechat]切换聊天ai（可选glm/gpt/spark/yi）" \
-                       "\n[#changeimage]切换图像生成（可选diffusion/diffusers/dalle）" \
+                       "\n[#changeimage]切换图像生成（可选diffusion/diffusers/dallE）" \
                        "\n[#draw]绘画指令" \
                        "\n[#ctx]导入聊天记录" \
                        "\n[#add]上下文中添加用户消息" \
@@ -149,7 +169,7 @@ class ChatAI(ReplyAI, ABC):
                 self.ctx.clear()
                 return f"[{self.uid}]的会话已清空，请继续新话题~"
             elif query == "#长度":
-                return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
+                return "[{}]会话信息如下：\n总轮数为{}\n总令牌长度为{}" \
                     .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
             elif "#del" in query:
                 num = query.replace("#del", "", 1).strip()
@@ -159,6 +179,6 @@ class ChatAI(ReplyAI, ABC):
                     num = int(num)
                 for i in range(num):
                     self.ctx.pop()
-                return "[{}]会话信息如下：\n总轮数为{}\n总字符长度为{}" \
+                return "[{}]会话信息如下：\n总轮数为{}\n总令牌长度为{}" \
                     .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
         return None

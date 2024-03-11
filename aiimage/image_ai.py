@@ -1,57 +1,30 @@
-import base64
 import random
 import re
 import time
-from abc import ABC
+from abc import ABC, abstractmethod
 from io import BytesIO
 
 import PIL
-import requests
 from PIL.Image import Image
 
 import journal
-from config import image as image_conf
 from ai import ReplyAI
+from config import match, match_image, seed_pattern, lora_pattern, ch_char_pattern, width_height_pattern
 from cos import tx_cos
-from plugin import youdao
 from journal import BaseDict
-
-diffusion_conf = image_conf['diffusion']
-qq_image_pattern = "\\[CQ:image,.*url=(.+?)]"  # qq图片
-wx_image_pattern = "\\[base64=(.+?)]"  # wx图片
-general_image_pattern = "\\[image=(.+?)]"
-seed_pattern = "seed=(\\d+)"  # 随机数
-width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
-ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
-lora_pattern = "(&lt;|\\<)lora:(.+?)(&gt;|\\>)"  # lora
-
-
-def _match(pattern, query):
-    match = re.findall(pattern, query)
-    query = re.sub(pattern, '', query)
-    return match, query
-
-
-def replace_image(query):
-    query = re.sub(qq_image_pattern, '', query)
-    query = re.sub(wx_image_pattern, '', query)
-    return query.strip()
+from plugin import youdao
 
 
 class ImagePrompt(BaseDict):
-    def __init__(self, query: str, from_type: str):
+    def __init__(self, query: str):
         super().__init__()
-        img_url = None
-        img_base64 = None
-        if from_type == 'qq':
-            img_url, query = _match(qq_image_pattern, query)
-        elif from_type == 'wx':
-            img_base64, query = _match(wx_image_pattern, query)
-        else:
-            img_url, query = _match(general_image_pattern, query)
-        seed, query = _match(seed_pattern, query)
-        width_height, query = _match(width_height_pattern, query)
-        lora, query = _match(lora_pattern, query)
+        self.img = None
+        images, query = match_image(query)
+        if len(images):
+            self.img = images[0]
+        seed, query = match(seed_pattern, query)
+        width_height, query = match(width_height_pattern, query)
+        lora, query = match(lora_pattern, query)
         prompts = query.split('neg_prompt=')
         self.origin_prompt = prompts[0]
         self.origin_neg_prompt = prompts[1] if len(prompts) > 1 else ""
@@ -66,17 +39,8 @@ class ImagePrompt(BaseDict):
             self.width = int(width_height[0][0])
             self.height = int(width_height[0][1])
         self.seed = random.randint(0, 2147483647) if len(seed) == 0 else int(seed[0])
-        self.img = None
-        self.img_url = None
         lora = [x[1] for x in lora]
         self.prompt += f"<lora:{'>,<lora:'.join(lora)}>" if lora else ""
-        if img_url:
-            self.img_url = img_url[0]
-            response = requests.get(self.img_url)
-            self.img = PIL.Image.open(BytesIO(response.content))
-        if img_base64:
-            base64_data = base64.b64decode(img_base64[0])
-            self.img = PIL.Image.open(BytesIO(base64_data))
 
     def prompt_len(self):
         return len(self.prompt) + len(self.neg_prompt)
@@ -100,11 +64,11 @@ class ImageAI(ReplyAI, ABC):
         super().__init__(**kwargs)
         self.style = style
 
-    # @abstractmethod
+    @abstractmethod
     def generate(self, query: str, jl, ipt=None):
         raise NotImplementedError
 
-    def upload(self, img: Image):
+    def upload(self, img: PIL.Image):
         try:
             store_dir = tx_cos.store_dir("img")
             buffer = BytesIO()
@@ -125,7 +89,7 @@ class ImageAI(ReplyAI, ABC):
         """
         jl = journal.default_journal(**self.__dict__)
         now = time.time()
-        ipt = ImagePrompt(query, self.from_type)
+        ipt = ImagePrompt(query)
         url, err = self.generate(query, jl, ipt)
         elapsed_sec = time.time() - now
         reply = ImageReply(ipt.prompt, ipt.neg_prompt, f"{ipt.width}x{ipt.height}",

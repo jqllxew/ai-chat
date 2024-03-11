@@ -2,9 +2,7 @@ import hashlib
 import json
 
 import openai
-
-from aiimage.image_ai import replace_image
-from config import chat as chat_conf, display
+from config import chat as chat_conf, display, match, cq_image_url_pattern
 from logger import logger
 from plugin import GptFunction
 from .chatai import ChatAI
@@ -49,10 +47,21 @@ class ChatGPT(ChatAI):
         _hash = hashlib.md5(str(prompt).encode()).hexdigest()
         if self._cache_len.get('_hash') != _hash:
             self._cache_len['_hash'] = _hash
-            self._cache_len['_len'] = self.num_tokens_from_messages(prompt, self.model_id)
+            self._cache_len['_len'] = super().get_prompt_len(prompt)
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
+        images, query = match(cq_image_url_pattern, query)
+        if len(images):
+            query = [{
+                "type": "text",
+                "text": query
+            }, {
+                "type": "image_url",
+                "image_url": {
+                    "url": images[0]
+                }
+            }]
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_req_tokens:
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
@@ -70,9 +79,6 @@ class ChatGPT(ChatAI):
 
     def generate(self, query, jl, stream=False):
         prompt = self.get_prompt(query)
-        if replace_image(query) == "":  # 只有图片
-            print("only image")
-            return ""
         if self.enable_function:
             response = openai.ChatCompletion.create(
                 model=self.model_id,
@@ -106,7 +112,7 @@ class ChatGPT(ChatAI):
             messages=prompt,
             stream=stream,
             n=1,  # 默认为1,对一个提问生成多少个回答
-            temperature=1,  # 默认为1,0~2
+            temperature=1.5,  # 默认为1,0~2
             # top_p = 1,                # 默认为1,0~1，效果类似temperature，不建议都用
             # stop = '',                # 遇到stop停止生成内容
             # presence_penalty = 2,     # 默认为0,-2~2，越大越允许跑题
@@ -131,6 +137,8 @@ class ChatGPT(ChatAI):
         elif "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
             try:
+                if model_id == "preview":
+                    model_id = "gpt-4-vision-preview"
                 self.set_model_attr(model_id)
                 return f"[{self.uid}]已切换模型{model_id}"
             except Exception as e:

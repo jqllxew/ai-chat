@@ -1,5 +1,12 @@
+import base64
+import re
+from io import BytesIO
+
 import yaml
 import os
+import PIL
+import requests
+from PIL.Image import Image
 
 
 class ConfDict(dict):
@@ -50,3 +57,32 @@ cos = ConfDict(_data.get('cos'))
 fanyi = ConfDict(_data.get('fanyi'))
 journal = ConfDict(_data.get('journal'))
 plugin = ConfDict(_data.get('plugin'))
+
+
+base64_image_pattern = "\\[base64=(.+?)]"  # base64图片
+seed_pattern = "seed=(\\d+)"  # 随机数
+width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
+ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
+lora_pattern = "(&lt;|\\<)lora:(.+?)(&gt;|\\>)"  # lora
+cq_speech_md5_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1.*]"
+cq_image_url_pattern = "\\[CQ:image.*url=(.+?)]"
+
+
+def match(pattern, query):
+    if query:
+        _f = re.findall(pattern, query)
+        query = re.sub(pattern, '', query)
+        return _f, query
+
+
+def match_image(query: str) -> (str, list[PIL.Image]):
+    img_url, query = match(cq_image_url_pattern, query)
+    img_base64, query = match(base64_image_pattern, query)
+    images: list[PIL.Image] = []
+    if img_url:
+        response = requests.get(img_url[0])
+        images.append(PIL.Image.open(BytesIO(response.content)))
+    if img_base64:
+        base64_data = base64.b64decode(img_base64[0])
+        images.append(PIL.Image.open(BytesIO(base64_data)))
+    return images, query

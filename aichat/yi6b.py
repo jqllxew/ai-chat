@@ -1,4 +1,5 @@
 import threading
+from typing import Callable
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 
@@ -24,8 +25,11 @@ class Yi6b(ChatGPT):
         self.max_resp_tokens = max_resp_tokens
         self.max_req_tokens = max_tokens - max_resp_tokens
 
-    def get_prompt_len(self, prompt):
-        return sum(len(tokenizer.tokenize(x.get("content"))) for x in prompt)
+    def encode_len(self) -> Callable[[str], int]:
+        def tokenize(value: str) -> int:
+            return len(tokenizer.tokenize(value))
+
+        return tokenize
 
     def generate(self, query: str, jl: journal.Journal, stream=False):
         prompt = self.get_prompt(query)
