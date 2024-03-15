@@ -75,6 +75,8 @@ def queue_generator(ws, queue, timeout=10):
             code = data['header']['code']
             if code != 0:
                 print(f'请求错误: {code}, {data}')
+                if data:
+                    yield data.get('header', {}).get('message')
                 ws.close()
                 break
             else:
@@ -94,16 +96,16 @@ class ChatSpark(ChatAI):
         self.app_id = app_id
         self.api_key = api_key
         self.api_secret = api_secret
-        self.model_id = model_id or "sparkv2"
+        self.model_id = None
         self.max_length = None
         self.host = None
         self.path = None
         self.spark_url = None
         self.domain = None
-        self.set_model_attr()
+        self.set_model_attr(model_id or "sparkv3.5")
 
-    def set_model_attr(self):
-        model_attrs = _model_select.get(self.model_id)
+    def set_model_attr(self, model_id):
+        model_attrs = _model_select.get(model_id)
         if model_attrs is None:
             raise NotImplementedError(f"未找到{self.model_id}")
         spark_url = model_attrs['spark-url']
@@ -113,6 +115,7 @@ class ChatSpark(ChatAI):
         self.path = parser.path
         self.domain = model_attrs['domain']
         self.max_length = model_attrs['max-length'] or 2048
+        self.model_id = model_id
 
     def _create_url(self):
         # 生成RFC1123格式的时间戳
@@ -175,18 +178,14 @@ class ChatSpark(ChatAI):
     def get_prompt(self, query=""):
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_length:
-            del self.ctx[0]
+            self.ctx.pop(0)
         return self.ctx
-
-    def get_prompt_len(self, prompt):
-        return self.num_tokens_from_messages(prompt)
 
     def instruction(self, query):
         if "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
             try:
-                self.model_id = model_id
-                self.set_model_attr()
+                self.set_model_attr(model_id)
                 return f"[{self.uid}]已切换模型{model_id}"
             except Exception as e:
                 return str(e)

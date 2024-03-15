@@ -47,6 +47,14 @@ chat:
           domain: generalv2
           spark-url: ws://spark-api.xf-yun.com/v2.1/chat
           max-length: 8000
+        sparkv3:
+          domain: generalv3
+          spark-url: ws://spark-api.xf-yun.com/v3.1/chat
+          max-length: 8000
+        sparkv3.5:
+          domain: generalv3.5
+          spark-url: ws://spark-api.xf-yun.com/v3.5/chat
+          max-length: 8000
   thudm:
     glm:
       model-id: THUDM/chatglm3-6b # or local path
