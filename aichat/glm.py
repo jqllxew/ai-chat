@@ -29,8 +29,12 @@ class ChatGLM(ChatAI):
                 model = AutoModel.from_pretrained(self.model_id, trust_remote_code=True).half().cuda()
             model = model.eval()
 
-    def set_system(self, system_text):
-        self.ctx.insert(0, {"role": "system", "content": system_text})
+    def set_system(self, text):
+        if text:
+            self.ctx.insert(0, {"role": "system", "content": text})
+        else:
+            if len(self.ctx) and self.ctx[0].get('role') == 'system':
+                self.ctx.pop(0)
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})

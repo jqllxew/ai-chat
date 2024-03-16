@@ -166,6 +166,7 @@ class ChatAI(ReplyAI, ABC):
                             self.append_ctx(reply=tag_text)
                 return "セットアップ完了"
             elif query == "#清空":
+                self.set_system(None)
                 self.ctx.clear()
                 return f"[{self.uid}]的会话已清空，请继续新话题~"
             elif query == "#长度":

@@ -125,7 +125,11 @@ class ChatGPT(ChatAI):
         return res.choices[0]['message'].get('content')
 
     def set_system(self, text):
-        text and self.ctx.insert(0, {"role": "system", "content": text})
+        if text:
+            self.ctx.insert(0, {"role": "system", "content": text})
+        else:
+            if len(self.ctx) and self.ctx[0].get('role') == 'system':
+                self.ctx.pop(0)
 
     def instruction(self, query):
         if "#help" == query:
