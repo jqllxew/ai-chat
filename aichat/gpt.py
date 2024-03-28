@@ -112,7 +112,7 @@ class ChatGPT(ChatAI):
             messages=prompt,
             stream=stream,
             n=1,  # 默认为1,对一个提问生成多少个回答
-            temperature=1.5,  # 默认为1,0~2
+            temperature=1.2,  # 默认为1,0~2
             # top_p = 1,                # 默认为1,0~1，效果类似temperature，不建议都用
             # stop = '',                # 遇到stop停止生成内容
             # presence_penalty = 2,     # 默认为0,-2~2，越大越允许跑题

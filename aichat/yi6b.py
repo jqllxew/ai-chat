@@ -1,8 +1,5 @@
 import threading
 from typing import Callable
-
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
-
 import journal
 from aichat.gpt import ChatGPT
 
@@ -11,7 +8,9 @@ model = None
 
 
 class Yi6b(ChatGPT):
+
     def __init__(self, model_id, max_tokens, max_resp_tokens, **kw):
+        from transformers import AutoModelForCausalLM, AutoTokenizer
         super().__init__(**kw)
         self.model_id = model_id or "01-ai/Yi-6b-Chat"
         global tokenizer, model
@@ -32,6 +31,7 @@ class Yi6b(ChatGPT):
         return tokenize
 
     def generate(self, query: str, jl: journal.Journal, stream=False):
+        from transformers import TextIteratorStreamer
         prompt = self.get_prompt(query)
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)

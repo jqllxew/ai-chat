@@ -70,7 +70,7 @@ chat:
 
 qq:
   # CQ-http地址
-  cq-http-url: http://127.0.0.1:8700
+  cq-http-url: http://127.0.0.1:5700
   # qq号
   uid:
   # 昵称
