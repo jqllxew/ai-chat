@@ -137,7 +137,7 @@ class ChatAI(ReplyAI, ABC):
             if query == "#help":
                 return "欢迎使用\n目前有以下指令可供使用：" \
                        "\n[#清空]清空您的会话记录" \
-                       "\n[#长度]统计您的会话轮数与总字符长度" \
+                       "\n[#len]统计您的会话轮数与总令牌数" \
                        "\n[#changechat]切换聊天ai（可选glm/gpt/spark/yi）" \
                        "\n[#changeimage]切换图像生成（可选diffusion/diffusers/dallE）" \
                        "\n[#draw]绘画指令" \
@@ -169,9 +169,9 @@ class ChatAI(ReplyAI, ABC):
                 self.set_system(None)
                 self.ctx.clear()
                 return f"[{self.uid}]的会话已清空，请继续新话题~"
-            elif query == "#长度":
-                return "[{}]会话信息如下：\n总轮数为{}\n总令牌长度为{}" \
-                    .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
+            elif query == "#len":
+                return "[{}]会话信息如下：\n当前模型{}\n总轮数为{}\n总令牌数为{}" \
+                    .format(self.uid, self.model_id, len(self.ctx), self.get_prompt_len(self.join_ctx()))
             elif "#del" in query:
                 num = query.replace("#del", "", 1).strip()
                 if num == "":
@@ -180,6 +180,6 @@ class ChatAI(ReplyAI, ABC):
                     num = int(num)
                 for i in range(num):
                     self.ctx.pop()
-                return "[{}]会话信息如下：\n总轮数为{}\n总令牌长度为{}" \
+                return "[{}]会话信息如下：\n总轮数为{}\n总令牌数为{}" \
                     .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
         return None
