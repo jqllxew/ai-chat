@@ -32,7 +32,7 @@ class Yi6b(ChatGPT):
 
     def generate(self, query: str, jl: journal.Journal, stream=False):
         from transformers import TextIteratorStreamer
-        prompt = self.get_prompt(query)
+        prompt, token_len = self.get_prompt(query)
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
         input_ids = tokenizer.apply_chat_template(
@@ -46,7 +46,7 @@ class Yi6b(ChatGPT):
             target=model.generate,
             kwargs={
                 "input_ids": input_ids.to('cuda'),
-                "max_new_tokens": self.max_resp_tokens,
+                "max_new_tokens": token_len if token_len is not None else self.max_resp_tokens,
                 "streamer": streamer,
                 "do_sample": True,
                 "repetition_penalty": 1.3,

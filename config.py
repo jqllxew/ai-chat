@@ -66,6 +66,8 @@ ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
 lora_pattern = "(&lt;|\\<)lora:(.+?)(&gt;|\\>)"  # lora
 cq_speech_md5_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1.*]"
 cq_image_url_pattern = "\\[CQ:image.*url=(.+?)]"
+custom_image_url_pattern = "img=(.*)"
+custom_token_len = "token=(\\d+)"  # 自定义token数
 
 
 def match(pattern, query):
@@ -73,11 +75,13 @@ def match(pattern, query):
         _f = re.findall(pattern, query)
         query = re.sub(pattern, '', query)
         return _f, query
+    return None, query
 
 
 def match_image(query: str) -> (str, list[PIL.Image]):
     img_url, query = match(cq_image_url_pattern, query)
     img_base64, query = match(base64_image_pattern, query)
+    img_custom, query = match(custom_image_url_pattern, query)
     images: list[PIL.Image] = []
     if img_url:
         response = requests.get(img_url[0])
@@ -85,4 +89,8 @@ def match_image(query: str) -> (str, list[PIL.Image]):
     if img_base64:
         base64_data = base64.b64decode(img_base64[0])
         images.append(PIL.Image.open(BytesIO(base64_data)))
+    if img_custom:
+        print(img_custom[0])
+        response2 = requests.get(img_custom[0])
+        images.append(PIL.Image.open(BytesIO(response2.content)))
     return images, query

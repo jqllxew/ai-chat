@@ -2,7 +2,7 @@ import hashlib
 import json
 
 import openai
-from config import chat as chat_conf, display, match, cq_image_url_pattern
+from config import chat as chat_conf, display, match, cq_image_url_pattern, custom_token_len
 from logger import logger
 from plugin import GptFunction
 from .chatai import ChatAI
@@ -52,6 +52,7 @@ class ChatGPT(ChatAI):
 
     def get_prompt(self, query=""):
         images, query = match(cq_image_url_pattern, query)
+        token_len, query = match(custom_token_len, query)
         if len(images):
             query = [{
                 "type": "text",
@@ -75,10 +76,10 @@ class ChatGPT(ChatAI):
                     self.ctx.pop(0)
             else:
                 raise RuntimeError("prompt text too long")
-        return self.ctx
+        return self.ctx, int(token_len[0]) if token_len else None
 
     def generate(self, query, jl, stream=False):
-        prompt = self.get_prompt(query)
+        prompt, token_len = self.get_prompt(query)
         if self.enable_function:
             response = openai.ChatCompletion.create(
                 model=self.model_id,
@@ -108,7 +109,7 @@ class ChatGPT(ChatAI):
         jl.before(query, prompt)
         res = openai.ChatCompletion.create(
             model=self.model_id,
-            max_tokens=self.max_resp_tokens,
+            max_tokens=token_len if token_len is not None else self.max_resp_tokens,
             messages=prompt,
             stream=stream,
             n=1,  # 默认为1,对一个提问生成多少个回答

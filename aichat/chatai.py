@@ -23,7 +23,7 @@ class ChatAI(ReplyAI, ABC):
         query and self.ctx.append(query)
         reply and self.ctx.append(reply)
 
-    def get_prompt(self, query=""):
+    def get_prompt(self, query="") -> (str, int):
         """
         :param query: 用户发来的文本消息
         :return: prompts
@@ -31,7 +31,7 @@ class ChatAI(ReplyAI, ABC):
         if self.enable_ctx:
             self.append_ctx(query)
             return self.join_ctx()
-        return query
+        return query, None
 
     def encode_len(self) -> Callable[[str], int]:
         try:

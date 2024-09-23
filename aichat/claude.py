@@ -6,7 +6,7 @@ from anthropic._types import NOT_GIVEN
 from anthropic.types import ContentBlock
 import journal
 from aichat.gpt import ChatGPT
-from config import chat as chat_conf, display, match_image
+from config import chat as chat_conf, display, match_image, match, custom_token_len
 from logger import logger
 
 _model_select = display(chat_conf['anthropic']['claude']['model-select'])
@@ -27,10 +27,10 @@ class ChatClaude(ChatGPT):
         self.system_text = None
         self._model_select = _model_select
 
-    def _stream(self, prompt):
+    def _stream(self, prompt, token_len):
         with client.messages.stream(
                 model=self.model_id,
-                max_tokens=self.max_resp_tokens,
+                max_tokens=token_len if token_len is not None else self.max_resp_tokens,
                 temperature=0.8,
                 system=self.system_text or NOT_GIVEN,
                 messages=prompt
@@ -38,10 +38,10 @@ class ChatClaude(ChatGPT):
             for x in _st.text_stream:
                 yield x
 
-    def _create(self, prompt):
+    def _create(self, prompt, token_len):
         message = client.messages.create(
             model=self.model_id,
-            max_tokens=self.max_resp_tokens,
+            max_tokens=token_len if token_len is not None else self.max_resp_tokens,
             temperature=0.8,
             system=self.system_text or NOT_GIVEN,
             messages=prompt
@@ -51,6 +51,7 @@ class ChatClaude(ChatGPT):
 
     def get_prompt(self, query=""):
         images, query = match_image(query)
+        token_len, query = match(custom_token_len, query)
         if len(images):
             buffered = io.BytesIO()
             images[0].save(buffered, format="JPEG")
@@ -77,15 +78,16 @@ class ChatClaude(ChatGPT):
                 self.ctx.pop(0)
             else:
                 raise RuntimeError("prompt text too long")
-        return self.ctx
+
+        return self.ctx, int(token_len[0]) if token_len else None
 
     def generate(self, query: str, jl: journal.Journal, stream=False):
-        prompt = self.get_prompt(query)
+        prompt, token_len = self.get_prompt(query)
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
         if stream:
-            return self._stream(prompt)
-        return self._create(prompt)
+            return self._stream(prompt, token_len)
+        return self._create(prompt, token_len)
 
     def set_system(self, text):
         self.system_text = text

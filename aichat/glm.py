@@ -3,6 +3,7 @@ from typing import Callable
 import torch
 from transformers import AutoTokenizer, AutoModel
 
+from config import match, custom_token_len
 from logger import logger
 from .chatai import ChatAI
 
@@ -47,6 +48,7 @@ class ChatGLM(ChatAI):
         return tokenize
 
     def get_prompt(self, query=""):
+        token_len, query = match(custom_token_len, query)
         self.append_ctx(query)
         prompt = self.join_ctx()
         while self.get_prompt_len(prompt) > self.max_length:
@@ -61,12 +63,12 @@ class ChatGLM(ChatAI):
                     self.ctx.pop(0)
             else:
                 raise RuntimeError("prompt text too long")
-        return self.ctx
+        return self.ctx, int(token_len[0]) if token_len else None
 
     def generate(self, query, jl, stream=False):
         global model, tokenizer
-        history = [x for x in self.get_prompt()]
-        prompt = self.get_prompt(query)
+        history = [x for x, _ in self.get_prompt()]
+        prompt, token_len = self.get_prompt(query)
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
         try:
@@ -74,7 +76,7 @@ class ChatGLM(ChatAI):
                 return (x for x, _ in model.stream_chat(
                     tokenizer, query,
                     history=history,
-                    max_length=self.max_length,
+                    max_length=token_len if token_len is not None else self.max_length,
                     top_p=self.top_p,
                     temperature=self.temperature
                 ))

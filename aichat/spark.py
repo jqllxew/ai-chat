@@ -14,7 +14,7 @@ from wsgiref.handlers import format_date_time
 import journal
 from aichat import ChatAI
 import websocket
-from config import chat as chat_conf, display
+from config import chat as chat_conf, display, match, custom_token_len
 
 
 _model_select = display(chat_conf['iflytek']['spark']['model-select'])
@@ -31,10 +31,10 @@ def on_open(ws):
     thread.start_new_thread(run, (ws,))
 
 def run(ws, *args):
-    data = json.dumps(gen_params(appid=ws.appid, domain=ws.domain, question=ws.question))
+    data = json.dumps(gen_params(appid=ws.appid, domain=ws.domain, question=ws.question, token_len=ws.token_len))
     ws.send(data)
 
-def gen_params(appid, domain, question):
+def gen_params(appid, domain, question, token_len):
     """
     通过appid和用户的提问来生成请参数
     """
@@ -47,7 +47,7 @@ def gen_params(appid, domain, question):
             "chat": {
                 "domain": domain,
                 "random_threshold": 0.5,
-                "max_tokens": 2048,
+                "max_tokens": token_len if token_len is not None else 2048,
                 "auditing": "default"
             }
         },
@@ -149,7 +149,7 @@ class ChatSpark(ChatAI):
                                     on_error=on_error,
                                     on_close=on_close,
                                     on_open=on_open)
-        prompt = self.get_prompt(query)
+        prompt, token_len = self.get_prompt(query)
         message_queue = Queue()
         # message_gen = message_generator(message_queue)
         # next(message_gen)  # Start the generator
@@ -157,6 +157,7 @@ class ChatSpark(ChatAI):
         ws.appid = self.app_id
         ws.question = prompt
         ws.domain = self.domain
+        ws.token_len = token_len
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
         _thread = threading.Thread(target=ws.run_forever, kwargs={"sslopt": {"cert_reqs": ssl.CERT_NONE}})
@@ -176,10 +177,11 @@ class ChatSpark(ChatAI):
         reply and self.ctx.append({"role": "assistant", "content": reply})
 
     def get_prompt(self, query=""):
+        token_len, query = match(custom_token_len, query)
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_length:
             self.ctx.pop(0)
-        return self.ctx
+        return self.ctx, int(token_len[0]) if token_len else None
 
     def instruction(self, query):
         if "#切换" in query:
