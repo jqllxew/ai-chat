@@ -1,7 +1,7 @@
 import hashlib
 import json
-
-import openai
+import httpx
+from openai import OpenAI
 from config import chat as chat_conf, display, match, cq_image_url_pattern, custom_token_len
 from logger import logger
 from plugin import GptFunction
@@ -10,11 +10,8 @@ from .chatai import ChatAI
 _model_select = display(chat_conf['openai']['gpt']['model-select'])
 _api_key = display(chat_conf['openai']['gpt']['api-key'])
 _api_proxy = display(chat_conf['openai']['gpt']['proxy'])
-openai.api_key = _api_key
-openai.proxy = {
-    'http': _api_proxy,
-    'https': _api_proxy
-} if _api_proxy else None
+client = OpenAI(api_key=_api_key, http_client=httpx.Client(proxy=_api_proxy)) \
+    if _api_proxy else OpenAI(api_key=_api_proxy)
 
 
 class ChatGPT(ChatAI):
@@ -81,7 +78,7 @@ class ChatGPT(ChatAI):
     def generate(self, query, jl, stream=False):
         prompt, token_len = self.get_prompt(query)
         if self.enable_function:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=self.model_id,
                 messages=prompt,
                 functions=GptFunction.functions,
@@ -107,7 +104,7 @@ class ChatGPT(ChatAI):
                 prompt = self.get_prompt()
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,
             messages=prompt,
@@ -122,8 +119,8 @@ class ChatGPT(ChatAI):
             # user = 'test',            # 默认无,用户名
         )
         if stream:
-            return (x.choices[0]['delta'].get('content') or '' for x in res)
-        return res.choices[0]['message'].get('content')
+            return (x.choices[0].delta.content or '' for x in res)
+        return res.choices[0].message.content
 
     def set_system(self, text):
         if text:

@@ -7,18 +7,12 @@ chat:
     gpt:
       api-key: # your api key
       model-select:
-        gpt-3.5-turbo:
-          max-tokens: 4096
-          max-resp-tokens: 768
-        gpt-3.5-turbo-16k:
-          max-tokens: 16384
-          max-resp-tokens: 768
-        gpt-4:
+        gpt-4o-mini:
           max-tokens: 8192
-          max-resp-tokens: 768
-        gpt-4-vision-preview:
+          max-resp-tokens: 512
+        gpt-4o:
           max-tokens: 8192
-          max-resp-tokens: 768
+          max-resp-tokens: 512
       proxy: http://127.0.0.1:7890
       default-system:
   anthropic:

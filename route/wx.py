@@ -16,10 +16,11 @@ def receive():
     message = req_json['text']
     room = req_json.get('room')
     if room and room != 'undefined':
+        room_id = room.get('id')
         if at_nickname in message:
             logger.info(f"[wx]{name}-群聊:{message}")
             message = message.replace(at_nickname, "", 1)
-            msg_text = aichat.chat(uid, message, 'wx')
+            msg_text = aichat.chat(room_id, message, 'wx')
             msg_text = f"@{name}\n" + msg_text
         else:
             msg_text = ""
