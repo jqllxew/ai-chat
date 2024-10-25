@@ -11,11 +11,11 @@ _model_select = display(chat_conf['openai']['gpt']['model-select'])
 _api_key = display(chat_conf['openai']['gpt']['api-key'])
 _api_proxy = display(chat_conf['openai']['gpt']['proxy'])
 client = OpenAI(api_key=_api_key, http_client=httpx.Client(proxy=_api_proxy)) \
-    if _api_proxy else OpenAI(api_key=_api_proxy)
+    if _api_proxy else OpenAI(api_key=_api_key)
 
 
 class ChatGPT(ChatAI):
-    def __init__(self, model_id="gpt-3.5-turbo", default_system=None, model_select=None, **kw):
+    def __init__(self, model_id="gpt-4o-mini", default_system=None, model_select=None, **kw):
         super().__init__(model_id=model_id, **kw)
         self.model_id = None
         self.max_req_tokens = None

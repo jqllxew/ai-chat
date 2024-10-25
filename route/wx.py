@@ -19,7 +19,9 @@ def receive():
         room_id = room.get('id')
         if at_nickname in message:
             logger.info(f"[wx]{name}-群聊:{message}")
-            message = message.replace(at_nickname, "", 1)
+            message = message.replace(at_nickname, "", 1).strip()
+            if message[0] != "#":
+                message = f"[用户{name}]说:" + message
             msg_text = aichat.chat(room_id, message, 'wx')
             msg_text = f"@{name}\n" + msg_text
         else:
