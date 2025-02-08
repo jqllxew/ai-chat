@@ -2,6 +2,7 @@ import aiimage
 from config import chat as chat_conf, display
 from .chatai import ChatAI
 from .claude import ChatClaude
+from .deepseek import DeepSeek
 from .gpt import ChatGPT
 from .spark import ChatSpark
 from .yi6b import Yi6b
@@ -64,6 +65,15 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
                 model_id=yi_conf['model-id'],
                 max_tokens=yi_conf['max-tokens'],
                 max_resp_tokens=yi_conf['max-resp-tokens']
+            )
+    elif 'deepseek' == chat_type:
+        if type(user_models.get(uid)) is not DeepSeek:
+            user_models[uid] = DeepSeek(
+                uid=uid,
+                default_system=display(chat_conf['deepseek']['default-system']),
+                from_type=from_type,
+                enable_ctx=enable_ctx,
+                enable_ins=enable_ins
             )
     else:
         return f"未找到 {chat_type}"

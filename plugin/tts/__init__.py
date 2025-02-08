@@ -32,3 +32,7 @@ def speak(text):
 
 
 __all__ = ["tts", "tts_url", "tts_cos", "speak"]
+
+
+if __name__ == "__main__":
+    speak("123456")

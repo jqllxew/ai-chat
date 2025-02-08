@@ -26,6 +26,9 @@ class ChatGPT(ChatAI):
         self.set_model_attr(model_id)
         self.set_system(default_system)
 
+    def getClient(self):
+        return client
+
     def set_model_attr(self, model_id=None):
         model_attrs = self._model_select.get(model_id)
         if model_attrs is None:
@@ -78,13 +81,13 @@ class ChatGPT(ChatAI):
     def generate(self, query, jl, stream=False):
         prompt, token_len = self.get_prompt(query)
         if self.enable_function:
-            response = client.chat.completions.create(
+            response = self.getClient().chat.completions.create(
                 model=self.model_id,
                 messages=prompt,
                 functions=GptFunction.functions,
                 function_call="auto",  # auto is default, but we'll be explicit
             )
-            response_message = response["choices"][0]["message"]
+            response_message = response.choices[0].message
             if response_message.get("function_call"):
                 # Step 3: call the function
                 # Note: the JSON response may not always be valid; be sure to handle errors
@@ -104,7 +107,7 @@ class ChatGPT(ChatAI):
                 prompt = self.get_prompt()
         jl.prompt_len = self.get_prompt_len(prompt)
         jl.before(query, prompt)
-        res = client.chat.completions.create(
+        res = self.getClient().chat.completions.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,
             messages=prompt,

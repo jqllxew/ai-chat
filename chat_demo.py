@@ -1,6 +1,6 @@
 import logging
 
-from aichat import ChatGPT, ChatSpark, Yi6b, ChatAI, ChatClaude
+from aichat import ChatGPT, ChatSpark, Yi6b, ChatAI, ChatClaude, DeepSeek
 from config import chat as chat_conf, display
 from logger import logger
 from plugin.tts import speak
@@ -15,6 +15,12 @@ def create_gpt():
         enable_ins=True,
     )
 
+def create_deepseek():
+    return DeepSeek(
+        uid="test_gpt",
+        from_type="test",
+        enable_ins=True,
+    )
 
 def create_claude():
     return ChatClaude(
@@ -118,9 +124,9 @@ def living_main():
 
 if __name__ == "__main__":
     # glm_main()
-    # living_main()
-
+    living_main()
     # main(create_gpt())
-    main(create_claude())
+    # main(create_deepseek())
+    # main(create_claude())
     # main(create_spark())
     # main(create_yi())
