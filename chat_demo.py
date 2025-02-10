@@ -124,9 +124,9 @@ def living_main():
 
 if __name__ == "__main__":
     # glm_main()
-    living_main()
+    # living_main()
     # main(create_gpt())
-    # main(create_deepseek())
+    main(create_deepseek())
     # main(create_claude())
     # main(create_spark())
     # main(create_yi())

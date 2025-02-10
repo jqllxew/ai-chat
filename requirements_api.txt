@@ -4,13 +4,14 @@ openai==1.52.2
 Pillow==9.4.0
 pymongo==4.3.3
 PyYAML==6.0
-requests
+requests==2.28.2
 waitress==2.1.2
 beautifulsoup4
 alibabacloud_imagerecog20190930
 alibabacloud_ocr20191230
 websocket_client
 tiktoken
-anthropic
+anthropic==0.19.1
 werkzeug==2.2.2
 aliyun-python-sdk-core==2.13.3
+httpx==0.26.0

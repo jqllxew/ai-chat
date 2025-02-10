@@ -81,7 +81,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
 
 def u_model(uid, from_type=None, enable_ctx=True, enable_ins=True) -> ChatAI:
     if not user_models.get(uid):
-        u_change_model(uid, 'gpt', from_type, enable_ctx, enable_ins)
+        u_change_model(uid, chat_conf['default'], from_type, enable_ctx, enable_ins)
     return user_models.get(uid)
 
 

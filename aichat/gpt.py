@@ -10,8 +10,9 @@ from .chatai import ChatAI
 _model_select = display(chat_conf['openai']['gpt']['model-select'])
 _api_key = display(chat_conf['openai']['gpt']['api-key'])
 _api_proxy = display(chat_conf['openai']['gpt']['proxy'])
-client = OpenAI(api_key=_api_key, http_client=httpx.Client(proxy=_api_proxy)) \
-    if _api_proxy else OpenAI(api_key=_api_key)
+if _api_key:
+    client = OpenAI(api_key=_api_key, http_client=httpx.Client(proxy=_api_proxy)) \
+        if _api_proxy else OpenAI(api_key=_api_key)
 
 
 class ChatGPT(ChatAI):

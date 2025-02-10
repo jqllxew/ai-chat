@@ -3,9 +3,10 @@ server:
   log-level: INFO
 
 chat:
+  default: deepseek
   openai:
     gpt:
-      api-key: # your api key
+      api-key:
       model-select:
         gpt-4o-mini:
           max-tokens: 8192
@@ -17,21 +18,27 @@ chat:
       default-system:
   anthropic:
     claude:
-      api-key: # your api key
+      api-key:
       model-select:
         claude-3-opus-20240229:
           max-tokens: 8192
           max-resp-tokens: 512
         claude-3-sonnet-20240229:
+          max-tokens: 12384
+          max-resp-tokens: 512
+        claude-3-5-sonnet-20241022:
+          max-tokens: 12384
+          max-resp-tokens: 512
+        claude-3-haiku:
           max-tokens: 8192
           max-resp-tokens: 512
       proxy: http://127.0.0.1:7890
       default-system:
   iflytek:
-    spark:
-      app-id: # your app id
-      api-key: # your api key
-      api-secret: # your api secret
+    spark: # 星火大模型
+      app-id:
+      api-key:
+      api-secret:
       model-select:
         sparkv1.5:
           domain: general
@@ -52,8 +59,8 @@ chat:
   thudm:
     glm:
       model-id: THUDM/chatglm3-6b # or local path
-      quantize: 0
-      max-length: 2048
+      quantize: 4 # 量化
+      max-length: 10240
       top-p: 0.7
       temperature: 0.95
   yi:
@@ -61,20 +68,26 @@ chat:
       model-id: 01-ai/Yi-6b-Chat
       max-tokens: 4096
       max-resp-tokens: 512
+  deepseek:
+    api-key:
+    model-select:
+      deepseek-chat:
+        max-tokens: 8192
+        max-resp-tokens: 512
+      deepseek-reasoner:
+        max-tokens: 8192
+        max-resp-tokens: 512
+    default-system:
 
 qq:
   # CQ-http地址
   cq-http-url: http://127.0.0.1:5700
-  # qq号
-  uid:
-  # 昵称
-  nickname:
-  # 群聊时使用相同会话上下文
-  group-session: true
-  # 回复群语音
-  group-speech-reply: true
-  # 私聊白名单
-  private-white-list:
+  uid:  # qq号
+  nickname:  # 昵称
+  group-session: true # 群聊时使用相同会话上下文
+  group-speech-reply: true # 回复群语音
+  private-white-list: # 私聊白名单，不配置则不限制
+
 wx:
   # 昵称
   nickname:
@@ -127,13 +140,14 @@ image:
     # 步数
     steps: 22
 
-cos: # 使用绘画功能必须配置否则收不到图像
+cos: # 使用绘画/语音功能必须配置否则收不到图像/音频
   # 腾讯云cos 参考 https://console.cloud.tencent.com/cos
   tx:
     secret-id:
     secret-key:
     region:
     bucket:
+    store-dir: "{type}/{date}"
 
 fanyi: # 若不需要绘画prompt翻译请忽略
   youdao: # 有道智云 https://ai.youdao.com/console/
@@ -151,7 +165,7 @@ plugin:
       access-key-id:
       access-key-secret:
   speech-recog:
-    voices-base-path:
+    voices-base-path: ./audio/
     aliyun:
       app-key:
       access-key-id:
@@ -159,5 +173,5 @@ plugin:
 
 journal: # 若不需要记录请忽略
   mongo:
-    uri:
-    db:
+    uri: #mongodb://admin:123456@127.0.0.1:27017/
+    db: #aichat
