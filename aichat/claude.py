@@ -95,9 +95,9 @@ class ChatClaude(ChatGPT):
             model_id = query.replace("#切换", "", 1).strip()
             try:
                 if model_id == "opus":
-                    model_id = "claude-3-opus-20240229"
+                    model_id = "claude-3-5-opus-20241022"
                 elif model_id == "sonnet":
-                    model_id = "claude-3-sonnet-20240229"
+                    model_id = "claude-3-5-sonnet-20241022"
                 self.set_model_attr(model_id)
                 return f"[{self.uid}]已切换模型{model_id}"
             except Exception as e:

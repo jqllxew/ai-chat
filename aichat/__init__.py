@@ -110,5 +110,6 @@ __all__ = [
     "ChatClaude",
     "ChatGPT",
     "ChatSpark",
-    "Yi6b"
+    "Yi6b",
+    "DeepSeek"
 ]
