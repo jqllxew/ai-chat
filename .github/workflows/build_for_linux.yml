@@ -30,7 +30,7 @@ jobs:
     - name: Add config_example.yaml to dist
       run: cp config_example.yaml ./dist/
     - name: Upload artifacts linux_amd64
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux_amd64
         path: ./dist
