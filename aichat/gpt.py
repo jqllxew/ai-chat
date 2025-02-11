@@ -79,7 +79,7 @@ class ChatGPT(ChatAI):
                 raise RuntimeError("prompt text too long")
         return self.ctx, int(token_len[0]) if token_len else None
 
-    def generate(self, query, jl, stream=False):
+    def generate(self, query, stream=False):
         prompt, token_len = self.get_prompt(query)
         if self.enable_function:
             response = self.getClient().chat.completions.create(
@@ -106,8 +106,6 @@ class ChatGPT(ChatAI):
                     }
                 )  # extend conversation with function response
                 prompt = self.get_prompt()
-        jl.prompt_len = self.get_prompt_len(prompt)
-        jl.before(query, prompt)
         res = self.getClient().chat.completions.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,

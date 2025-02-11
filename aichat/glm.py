@@ -65,12 +65,10 @@ class ChatGLM(ChatAI):
                 raise RuntimeError("prompt text too long")
         return self.ctx, int(token_len[0]) if token_len else None
 
-    def generate(self, query, jl, stream=False):
+    def generate(self, query, stream=False):
         global model, tokenizer
         history = [x for x, _ in self.get_prompt()]
         prompt, token_len = self.get_prompt(query)
-        jl.prompt_len = self.get_prompt_len(prompt)
-        jl.before(query, prompt)
         try:
             if stream:
                 return (x for x, _ in model.stream_chat(

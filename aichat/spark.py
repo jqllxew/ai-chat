@@ -142,7 +142,7 @@ class ChatSpark(ChatAI):
         # 此处打印出建立连接时候的url,参考本demo的时候可取消上方打印的注释，比对相同参数时生成的url与自己代码生成的url是否一致
         return url
 
-    def generate(self, query: str, jl: journal.Journal, stream=False):
+    def generate(self, query: str, stream=False):
         websocket.enableTrace(False)
         ws_url = self._create_url()
         ws = websocket.WebSocketApp(url=ws_url,
@@ -158,8 +158,6 @@ class ChatSpark(ChatAI):
         ws.question = prompt
         ws.domain = self.domain
         ws.token_len = token_len
-        jl.prompt_len = self.get_prompt_len(prompt)
-        jl.before(query, prompt)
         _thread = threading.Thread(target=ws.run_forever, kwargs={"sslopt": {"cert_reqs": ssl.CERT_NONE}})
         _thread.start()
         if stream:

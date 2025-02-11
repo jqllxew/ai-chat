@@ -18,10 +18,10 @@ def chat_api():
     return json.dumps(res, ensure_ascii=False)
 
 
-@test_api.route('/ctx_set/<uid>', methods=['GET'])
+@test_api.route('/ctx_get/<uid>', methods=['GET'])
 def ctx_set(uid):
     ctx = aichat.u_model(uid).ctx
-    ctx.append(request.args.get('msg'))
+    # ctx.append(request.args.get('msg'))
     return json.dumps(list(ctx), ensure_ascii=False)
 
 
@@ -30,7 +30,7 @@ def stream():
     """
     fetch('/test/stream', {method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({q: '你是谁？',model: 'glm'})})
+    body: JSON.stringify({q: '你是谁？',model: 'gpt'})})
     .then(x => x.body.pipeThrough(new TextDecoderStream()).getReader())
     .then(async reader => {
         console.log(reader);

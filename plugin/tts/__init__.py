@@ -35,4 +35,4 @@ __all__ = ["tts", "tts_url", "tts_cos", "speak"]
 
 
 if __name__ == "__main__":
-    speak("123456")
+    _play_audio('audio/1739013131132')

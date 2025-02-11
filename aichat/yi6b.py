@@ -30,11 +30,9 @@ class Yi6b(ChatGPT):
 
         return tokenize
 
-    def generate(self, query: str, jl: journal.Journal, stream=False):
+    def generate(self, query: str, stream=False):
         from transformers import TextIteratorStreamer
         prompt, token_len = self.get_prompt(query)
-        jl.prompt_len = self.get_prompt_len(prompt)
-        jl.before(query, prompt)
         input_ids = tokenizer.apply_chat_template(
             prompt,
             tokenize=True,

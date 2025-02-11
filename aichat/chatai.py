@@ -77,7 +77,7 @@ class ChatAI(ReplyAI, ABC):
         return num_tokens
 
     @abstractmethod
-    def generate(self, query: str, jl: journal.Journal, stream=False):
+    def generate(self, query: str, stream=False):
         """
         :param jl:
         :param query:
@@ -90,9 +90,10 @@ class ChatAI(ReplyAI, ABC):
     def set_system(self, system_text):
         raise NotImplementedError
 
-    def reply_text(self, query: str, stream=False, jl: journal.Journal = None):
+    @journal.reply_log
+    def reply_text(self, query: str, stream=False, _done=lambda x: x):
         """
-        :param jl: journal环绕调用
+        :param _done:
         :param query: 用户发来的文本消息
         :param stream: 是否返回生成器
         :return: reply content
@@ -101,36 +102,30 @@ class ChatAI(ReplyAI, ABC):
         if ins:
             yield ins
         else:
-            if not jl:
-                jl = journal.default_journal(**self.__dict__)
-            try:
-                res = self.generate(query, jl, stream)
-                if stream:
-                    res_text = ""
-                    for x in res:
-                        yield x
-                        res_text += x
-                else:
-                    res_text = res
-                res_text = res_text.strip()
-                if self.enable_ctx:
-                    self.append_ctx(reply=res_text)
-                jl.after(res_text)
-                if not stream:
-                    yield res_text
-            except Exception as e:
-                jl.error(e)
-                raise e
+            res = self.generate(query, stream)
+            if stream:
+                res_text = ""
+                for x in res:
+                    yield x
+                    res_text += x
+            else:
+                res_text = res
+            res_text = res_text.strip()
+            _done(res_text)
+            if self.enable_ctx:
+                self.append_ctx(reply=res_text)
+            if not stream:
+                yield res_text
 
-    def reply(self, query: str, jl=None) -> (str, str):
+    def reply(self, query: str) -> (str, str):
         try:
-            return next(self.reply_text(query, False, jl)), None
+            return next(self.reply_text(query, False)), None
         except Exception as e:
             traceback.print_exc()
             return None, f"err: {e}"
 
-    def reply_stream(self, query: str, jl=None):
-        return self.reply_text(query, True, jl)
+    def reply_stream(self, query: str):
+        return self.reply_text(query, True)
 
     def instruction(self, query):
         if query[0] == "#":

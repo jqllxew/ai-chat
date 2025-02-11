@@ -22,7 +22,7 @@ if _api_key:
 
 class ChatClaude(ChatGPT):
 
-    def __init__(self, model_id="claude-3-sonnet-20240229", **kw):
+    def __init__(self, model_id="claude-3-5-sonnet-20241022", **kw):
         super().__init__(model_id, model_select=_model_select, **kw)
         self.system_text = None
         self._model_select = _model_select
@@ -81,10 +81,8 @@ class ChatClaude(ChatGPT):
 
         return self.ctx, int(token_len[0]) if token_len else None
 
-    def generate(self, query: str, jl: journal.Journal, stream=False):
+    def generate(self, query: str, stream=False):
         prompt, token_len = self.get_prompt(query)
-        jl.prompt_len = self.get_prompt_len(prompt)
-        jl.before(query, prompt)
         if stream:
             return self._stream(prompt, token_len)
         return self._create(prompt, token_len)

@@ -3,6 +3,19 @@ from logger import logger
 from .base import BaseDict
 
 
+def reply_log(func):
+    def wrapper(self, query, *args, **kwargs):
+        jl = default_journal(**self.__dict__)
+        try:
+            jl.before(query)
+            return func(self, query, *args, **kwargs, _done=lambda reply: jl.after(reply))
+        except Exception as e:
+            jl.error(e)
+            raise e
+
+    return wrapper
+
+
 class Journal(BaseDict):
     def __init__(self, uid=None, model_id=None, from_type=None, ctx=None,
                  prompt_len=None, **kw):
@@ -13,7 +26,7 @@ class Journal(BaseDict):
         self.ctx_len = len(ctx) if isinstance(ctx, list) else None
         self.prompt_len = prompt_len
 
-    def before(self, query, prompt):
+    def before(self, query):
         logger.info(f"[{self.model_id}]uid:{self.uid},query: {query}")
 
     def after(self, reply):
@@ -30,15 +43,13 @@ class JournalDefault(Journal):
         self.id = None
         self.state = 0
         self.query = None
-        self.prompt = None
         self.q_time = None
         self.reply = None
         self.r_time = None
         self.err = None
 
-    def before(self, query, prompt):
-        self.prompt = prompt.to_dict('img') if isinstance(prompt, BaseDict) else prompt
-        super().before(query, self.prompt)
+    def before(self, query):
+        super().before(query)
         self.query = query
         self.q_time = int(time.time())
         self.id = self.db.journal.insert_one(self.to_dict('db')).inserted_id

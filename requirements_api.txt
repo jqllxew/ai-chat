@@ -11,7 +11,7 @@ alibabacloud_imagerecog20190930
 alibabacloud_ocr20191230
 websocket_client
 tiktoken
-anthropic==0.19.1
 werkzeug==2.2.2
 aliyun-python-sdk-core==2.13.3
-httpx==0.26.0
+anthropic==0.34.1
+httpx==0.27.2
