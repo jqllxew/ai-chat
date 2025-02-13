@@ -40,14 +40,6 @@ chat:
       api-key:
       api-secret:
       model-select:
-        sparkv1.5:
-          domain: general
-          spark-url: ws://spark-api.xf-yun.com/v1.1/chat
-          max-length: 8000
-        sparkv2:
-          domain: generalv2
-          spark-url: ws://spark-api.xf-yun.com/v2.1/chat
-          max-length: 8000
         sparkv3:
           domain: generalv3
           spark-url: ws://spark-api.xf-yun.com/v3.1/chat

@@ -46,7 +46,7 @@ class ChatClaude(ChatGPT):
             system=self.system_text or NOT_GIVEN,
             messages=prompt
         )
-        if len(message.content) and isinstance(message.content[0], ContentBlock):
+        if len(message.content):
             return message.content[0].text
 
     def get_prompt(self, query=""):

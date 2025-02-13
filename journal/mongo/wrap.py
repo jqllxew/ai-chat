@@ -1,5 +1,4 @@
 import json
-import traceback
 from typing import Any
 from bson import json_util, ObjectId, SON
 from bson.json_util import JSONOptions, DEFAULT_JSON_OPTIONS

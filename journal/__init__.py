@@ -36,7 +36,7 @@ class Journal(BaseDict):
         logger.warn(f"[{self.model_id}]uid:{self.uid},error: {e}")
 
 
-class JournalDefault(Journal):
+class JournalMongoDB(Journal):
     def __init__(self, db, **kw):
         super().__init__(**kw)
         self.db = db
@@ -72,5 +72,5 @@ class JournalDefault(Journal):
 def default_journal(**kw) -> Journal:
     from .mongo import db
     if db:
-        return JournalDefault(db, **kw)
+        return JournalMongoDB(db, **kw)
     return Journal(**kw)

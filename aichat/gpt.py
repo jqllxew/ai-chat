@@ -4,7 +4,7 @@ import httpx
 from openai import OpenAI
 from config import chat as chat_conf, display, match, cq_image_url_pattern, custom_token_len
 from logger import logger
-from plugin import GptFunction
+import plugin
 from .chatai import ChatAI
 
 _model_select = display(chat_conf['openai']['gpt']['model-select'])
@@ -85,7 +85,7 @@ class ChatGPT(ChatAI):
             response = self.getClient().chat.completions.create(
                 model=self.model_id,
                 messages=prompt,
-                functions=GptFunction.functions,
+                functions=plugin.functions,
                 function_call="auto",  # auto is default, but we'll be explicit
             )
             response_message = response.choices[0].message
@@ -93,9 +93,9 @@ class ChatGPT(ChatAI):
                 # Step 3: call the function
                 # Note: the JSON response may not always be valid; be sure to handle errors
                 function_name = response_message["function_call"]["name"]
-                function_to_call = GptFunction.function_map[function_name]
+                function_to_call = plugin.function_map[function_name]
                 function_args = json.loads(response_message["function_call"]["arguments"])
-                function_response = function_to_call(function_args.get(GptFunction.param_name), self)
+                function_response = function_to_call(function_args.get(plugin.param+"0"), self)
                 # Step 4: send the info on the function call and function response to GPT
                 self.ctx.append(response_message)  # extend conversation with assistant's reply
                 self.ctx.append(
@@ -141,8 +141,6 @@ class ChatGPT(ChatAI):
         elif "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
             try:
-                if model_id == "preview":
-                    model_id = "gpt-4-vision-preview"
                 self.set_model_attr(model_id)
                 return f"[{self.uid}]已切换模型{model_id}"
             except Exception as e:
