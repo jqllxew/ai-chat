@@ -39,8 +39,13 @@ def stream():
     :return:
     """
     q = request.get_json()
-    aichat.u_change_model("test01", q.get("model"))
-    g = aichat.u_model("test01").reply_stream(q.get("q"))
+    qry = q.get("q")
+    model = q.get("model")
+    if qry.find("#") == 0:
+        g = aichat.chat("test01", qry, "test")
+    else:
+        aichat.u_change_model("test01", model)
+        g = aichat.u_model("test01").reply_stream(qry)
     resp = flask.make_response(g)
     return resp
 

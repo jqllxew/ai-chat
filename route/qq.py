@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import time
@@ -66,7 +67,9 @@ def receive():
             elif sub_type == "invite":
                 logger.info(f"[qq]邀请进群:{uid} 群号:{gid}")
                 handle_group_invite(flag, "true")
-    return "ok"
+    return json.dumps({
+        "msg": "ok"
+    })
 
 
 def _find_ssml(text):

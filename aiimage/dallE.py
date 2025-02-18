@@ -8,7 +8,7 @@ class DallE(ImageAI):
         if ipt is None:
             return None
         jl.prompt_len = ipt.prompt_len()
-        jl.before(query, ipt)
+        jl.before(query)
         size = f"{ipt.width}x{ipt.height}"
         response = openai.Image.create(
             model=self.model_id,
