@@ -67,7 +67,7 @@ class ChatClaude(ChatGPT):
                 }
             }, {
                 "type": "text",
-                "text": query
+                "text": query or "看看这张图吧"
             }]
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_req_tokens:
