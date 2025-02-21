@@ -1,8 +1,12 @@
 import hashlib
 import json
+import time
+from io import BytesIO
+
 import httpx
 from openai import OpenAI
-from config import chat as chat_conf, display, match, cq_image_url_pattern, custom_token_len
+from config import chat as chat_conf, display, match, match_image, custom_token_len
+from cos import tx_cos
 from logger import logger
 import plugin
 from .chatai import ChatAI
@@ -52,16 +56,24 @@ class ChatGPT(ChatAI):
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
-        images, query = match(cq_image_url_pattern, query)
+        images, query = match_image(query)
         token_len, query = match(custom_token_len, query)
         if len(images):
+            img = images[0]
+            buffer = BytesIO()
+            img.save(buffer, format="jpeg")
+            url = tx_cos.upload(
+                f"{self.model_id}/{self.uid}/{int(time.time() * 1000)}.jpg",
+                buffer.getvalue()
+            )
+            logger.info(f"[{self.model_id}] img_url: {url}")
             query = [{
                 "type": "text",
                 "text": query
             }, {
                 "type": "image_url",
                 "image_url": {
-                    "url": images[0]
+                    "url": url
                 }
             }]
         self.append_ctx(query)

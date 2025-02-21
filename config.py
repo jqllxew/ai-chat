@@ -6,7 +6,7 @@ import yaml
 import os
 import PIL
 import requests
-from PIL.Image import Image
+from PIL import Image
 
 
 class ConfDict(dict):
@@ -65,7 +65,7 @@ width_height_pattern = "(\\d+)x(\\d+)"  # 宽高
 ch_char_pattern = "[\u4e00-\u9fa5]+"  # 汉字
 lora_pattern = "(&lt;|\\<)lora:(.+?)(&gt;|\\>)"  # lora
 cq_speech_md5_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1.*]"
-cq_image_url_pattern = "\\[CQ:image.*url=(.+?)]"
+cq_image_url_pattern = "\\[CQ:image,file=(.+?),.*]"
 custom_image_url_pattern = "img=(.*)"
 custom_token_len = "token=(\\d+)"  # 自定义token数
 
@@ -79,13 +79,16 @@ def match(pattern, query):
 
 
 def match_image(query: str) -> (str, list[PIL.Image]):
-    img_url, query = match(cq_image_url_pattern, query)
+    img_cq_id, query = match(cq_image_url_pattern, query)
     img_base64, query = match(base64_image_pattern, query)
     img_custom, query = match(custom_image_url_pattern, query)
     images: list[PIL.Image] = []
-    if img_url:
-        response = requests.get(img_url[0])
-        images.append(PIL.Image.open(BytesIO(response.content)))
+    if img_cq_id:
+        res = requests.post(url=qq['cq-http-url'] + "/get_image",
+                            data={'file': img_cq_id}).json()
+        print(res)
+        if res["status"] == "ok":
+            images.append(Image.open(res["data"]["file"]))
     if img_base64:
         base64_data = base64.b64decode(img_base64[0])
         images.append(PIL.Image.open(BytesIO(base64_data)))
