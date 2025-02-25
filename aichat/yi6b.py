@@ -30,33 +30,4 @@ class Yi6b(ChatGPT):
         return tokenize
 
     def generate(self, query: str, stream=False):
-        from transformers import TextIteratorStreamer
-        prompt, token_len = self.get_prompt(query)
-        input_ids = tokenizer.apply_chat_template(
-            prompt,
-            tokenize=True,
-            add_generation_prompt=True,
-            return_tensors='pt'
-        )
-        streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
-        _thread = threading.Thread(
-            target=model.generate,
-            kwargs={
-                "input_ids": input_ids.to('cuda'),
-                "max_new_tokens": token_len if token_len is not None else self.max_resp_tokens,
-                "streamer": streamer,
-                "do_sample": True,
-                "repetition_penalty": 1.3,
-                "no_repeat_ngram_size": 5,
-                "temperature": 0.7,
-                "top_k": 40,
-                "top_p": 0.8
-            }
-        )
-        _thread.start()
-        if stream:
-            return streamer
-        else:
-            _thread.join()
-            result = ''.join(streamer)
-            return result
+        return super().transformers_generate(tokenizer, model, query, stream)

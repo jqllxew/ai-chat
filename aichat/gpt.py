@@ -36,13 +36,14 @@ class ChatGPT(ChatAI):
 
     def set_model_attr(self, model_id=None):
         model_attrs = self._model_select.get(model_id)
-        if model_attrs is None:
-            raise NotImplementedError(f"未找到{model_id}")
-        max_tokens = model_attrs['max-tokens']
-        max_resp_tokens = model_attrs['max-resp-tokens']
-        self.model_id = model_id
-        self.max_resp_tokens = max_resp_tokens
-        self.max_req_tokens = max_tokens - max_resp_tokens
+        if model_attrs:
+            max_tokens = model_attrs['max-tokens']
+            max_resp_tokens = model_attrs['max-resp-tokens']
+            self.model_id = model_id
+            self.max_resp_tokens = max_resp_tokens
+            self.max_req_tokens = max_tokens - max_resp_tokens
+            return f"[{self.uid}]已切换模型{model_id}"
+        return f"未找到{model_id}"
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})
@@ -152,11 +153,7 @@ class ChatGPT(ChatAI):
                    "\n[#addasst]向上下文中添加助手消息"
         elif "#切换" in query:
             model_id = query.replace("#切换", "", 1).strip()
-            try:
-                self.set_model_attr(model_id)
-                return f"[{self.uid}]已切换模型{model_id}"
-            except Exception as e:
-                return str(e)
+            return self.set_model_attr(model_id)
         elif "#system" in query:
             system_text = query.replace("#system", "", 1).strip()
             self.set_system(system_text)

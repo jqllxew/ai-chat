@@ -2,7 +2,7 @@ import aiimage
 from config import chat as chat_conf, display
 from .chatai import ChatAI
 from .claude import ChatClaude
-from .deepseek import DeepSeek
+from .deepseek import DeepSeekApi, DeepSeekLocal
 from .gpt import ChatGPT
 from .spark import ChatSpark
 from .yi6b import Yi6b
@@ -67,13 +67,25 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
                 max_resp_tokens=yi_conf['max-resp-tokens']
             )
     elif 'deepseek' == chat_type:
-        if type(user_models.get(uid)) is not DeepSeek:
-            user_models[uid] = DeepSeek(
+        if type(user_models.get(uid)) is not DeepSeekApi:
+            user_models[uid] = DeepSeekApi(
                 uid=uid,
-                default_system=display(chat_conf['deepseek']['default-system']),
+                default_system=display(chat_conf['deepseek']['api']['default-system']),
                 from_type=from_type,
                 enable_ctx=enable_ctx,
                 enable_ins=enable_ins
+            )
+    elif 'deepseek-local' == chat_type:
+        if type(user_models.get(uid)) is not DeepSeekLocal:
+            user_models[uid] = DeepSeekLocal(
+                uid=uid,
+                model_id=display(chat_conf['deepseek']['local']['model-id']),
+                default_system=display(chat_conf['deepseek']['local']['default-system']),
+                from_type=from_type,
+                enable_ctx=enable_ctx,
+                enable_ins=enable_ins,
+                max_tokens=chat_conf['deepseek']['local']['max-tokens'],
+                max_resp_tokens=chat_conf['deepseek']['local']['max-resp-tokens']
             )
     else:
         return f"未找到 {chat_type}"
@@ -111,5 +123,5 @@ __all__ = [
     "ChatGPT",
     "ChatSpark",
     "Yi6b",
-    "DeepSeek"
+    "DeepSeekApi"
 ]

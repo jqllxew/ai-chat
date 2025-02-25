@@ -61,15 +61,21 @@ chat:
       max-tokens: 4096
       max-resp-tokens: 512
   deepseek:
-    api-key:
-    model-select:
-      deepseek-chat:
-        max-tokens: 8192
-        max-resp-tokens: 512
-      deepseek-reasoner:
-        max-tokens: 8192
-        max-resp-tokens: 512
-    default-system:
+    api:
+      api-key:
+      model-select:
+        deepseek-chat:
+          max-tokens: 8192
+          max-resp-tokens: 512
+        deepseek-reasoner:
+          max-tokens: 8192
+          max-resp-tokens: 512
+      default-system:
+    local:
+      model-id: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+      max-tokens: 4096
+      max-resp-tokens: 512
+      default-system:
 
 qq:
   # CQ-http地址
