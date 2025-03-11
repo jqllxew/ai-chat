@@ -41,11 +41,14 @@ def stream():
     q = request.get_json()
     qry = q.get("q")
     model = q.get("model")
+    sid = q.get("sid")
+    if not sid:
+        sid = "test01"
     if qry.find("#") == 0:
-        g = aichat.chat("test01", qry, "test")
+        g = aichat.chat(sid, qry, "test")
     else:
-        aichat.u_change_model("test01", model)
-        g = aichat.u_model("test01").reply_stream(qry)
+        aichat.u_change_model(sid, model)
+        g = aichat.u_model(sid).reply_stream(qry)
     resp = flask.make_response(g)
     return resp
 

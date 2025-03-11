@@ -8,7 +8,7 @@ from config import chat as chat_conf, display
 _model_select = display(chat_conf['deepseek']['api']['model-select'])
 _api_key = display(chat_conf['deepseek']['api']['api-key'])
 if _api_key:
-    client = OpenAI(api_key=_api_key, base_url="https://api.deepseek.com")
+    client = OpenAI(api_key=_api_key, base_url="https://api.lkeap.cloud.tencent.com/v1")
 
 
 class DeepSeekApi(ChatGPT):
