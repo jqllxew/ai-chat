@@ -15,16 +15,17 @@ if _api_key:
 def _stream(response: Stream[ChatCompletionChunk]):
     flag = 0
     for chunk in response:
-        if chunk.choices[0].delta.reasoning_content:
+        delta = chunk.choices[0].delta
+        if hasattr(delta, 'reasoning_content') and delta.reasoning_content:
             if flag == 0:
                 flag = 1
                 yield "<think>"
-            yield chunk.choices[0].delta.reasoning_content or ''
+            yield delta.reasoning_content or ''
         else:
             if flag == 1:
                 flag = 2
                 yield "</think>"
-            yield chunk.choices[0].delta.content or ''
+            yield delta.content or ''
 
 
 class DeepSeekApi(ChatGPT):

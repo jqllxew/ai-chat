@@ -70,7 +70,6 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
         if type(user_models.get(uid)) is not DeepSeekApi:
             user_models[uid] = DeepSeekApi(
                 uid=uid,
-                model_id="deepseek-chat",
                 default_system=display(chat_conf['deepseek']['api']['default-system']),
                 from_type=from_type,
                 enable_ctx=enable_ctx,
