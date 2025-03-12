@@ -45,11 +45,11 @@ def stream():
     if not sid:
         sid = "test01"
     if qry.find("#") == 0:
-        g = aichat.chat(sid, qry, "test")
+        res = aichat.chat(sid, qry, "test")
     else:
         aichat.u_change_model(sid, model)
-        g = aichat.u_model(sid).reply_stream(qry)
-    resp = flask.make_response(g)
+        res = aichat.u_model(sid).reply_stream(qry)
+    resp = flask.make_response(res)
     return resp
 
 # @test_api.route('/chat', methods=['POST'])

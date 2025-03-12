@@ -22,7 +22,7 @@ if _api_key:
 class ChatGPT(ChatAI):
     def __init__(self, model_id="gpt-4o-mini", default_system=None, model_select=None, **kw):
         super().__init__(model_id=model_id, **kw)
-        self.model_id = None
+        self.model_id = model_id
         self.max_req_tokens = None
         self.max_resp_tokens = None
         self._cache_len = {}
@@ -57,6 +57,8 @@ class ChatGPT(ChatAI):
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
+        if self.max_req_tokens is None:
+            raise RuntimeError(f"模型[{self.model_id}]不存在或未配置max_token")
         images, query = match_image(query)
         token_len, query = match(custom_token_len, query)
         if len(images):

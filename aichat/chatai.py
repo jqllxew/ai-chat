@@ -126,7 +126,12 @@ class ChatAI(ReplyAI, ABC):
             return None, f"err: {e}"
 
     def reply_stream(self, query: str):
-        return self.reply_text(query, True)
+        try:
+            for x in self.reply_text(query, True):
+                yield x
+        except Exception as e:
+            traceback.print_exc()
+            yield f"err: {e}"
 
     def transformers_generate(self, tokenizer, model, query: str, stream=False):
         from transformers import TextIteratorStreamer

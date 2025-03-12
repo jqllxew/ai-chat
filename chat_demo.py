@@ -94,7 +94,7 @@ def glm_main():
         if query == "exit":
             print("bye")
             break
-        reply = ai.reply_stream(query)
+        reply, err = ai.reply_stream(query)
         for x in reply:
             print("\rAI：" + x, end='', flush=True)
         print("\n")
