@@ -37,7 +37,7 @@ class ChatAI(ReplyAI, ABC):
     def encode_len(self) -> Callable[[str], int]:
         try:
             encoding = tiktoken.encoding_for_model(self.model_id)
-        except KeyError:
+        except:
             encoding = tiktoken.get_encoding("cl100k_base")
 
         def tiktoken_encode(value) -> int:
@@ -72,7 +72,7 @@ class ChatAI(ReplyAI, ABC):
                 return 1
 
         num_tokens = count_tokens(prompt)
-        num_tokens += len(prompt)*4 # every message follows <im_start>{role/name}\n{content}<im_end>\n
+        num_tokens += len(prompt) * 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
         if num_tokens > 0:
             num_tokens += 2  # every reply is primed with <im_start>assistant
         return num_tokens
