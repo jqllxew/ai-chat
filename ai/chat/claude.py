@@ -3,9 +3,7 @@ import io
 
 import anthropic
 from anthropic._types import NOT_GIVEN
-from anthropic.types import ContentBlock
-import journal
-from aichat.gpt import ChatGPT
+from ai.chat.gpt import ChatGPT
 from config import chat as chat_conf, display, match_image, match, custom_token_len
 from logger import logger
 

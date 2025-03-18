@@ -1,10 +1,8 @@
 import json
 from datetime import datetime, timedelta, timezone
 
-import aiimage
-from ai import ReplyAI
-from plugin import image_recog
-from plugin import speech_recog
+import ai
+from plugin import speech_recog, image_recog
 from logger import logger
 
 
@@ -15,8 +13,8 @@ def get_current_time(val0=0, c=...) -> str:
     return utc_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def image_generate(val0, c: ReplyAI):
-    return aiimage.draw(c.uid, val0, c.from_type, use_template=False)
+def image_generate(val0, c: ai.base.ReplyAI):
+    return ai.image.draw(c.uid, val0, c.from_type, use_template=False)
 
 
 def mongo_query(val0, val1):

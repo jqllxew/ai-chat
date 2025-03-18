@@ -6,7 +6,7 @@ from typing import Callable
 from bs4 import BeautifulSoup
 import journal
 import tiktoken
-from ai import ReplyAI
+from ai.base import ReplyAI
 
 
 class ChatAI(ReplyAI, ABC):
@@ -80,7 +80,6 @@ class ChatAI(ReplyAI, ABC):
     @abstractmethod
     def generate(self, query: str, stream=False):
         """
-        :param jl:
         :param query:
         :param stream:
         :return: text:str or Iterator[str]

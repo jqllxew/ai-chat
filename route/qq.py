@@ -6,7 +6,7 @@ import time
 import requests
 from flask import request, Blueprint
 
-import aichat
+import ai
 from config import qq as qq_conf, match, cq_speech_md5_pattern
 from logger import logger
 from plugin import speech_recog
@@ -33,7 +33,7 @@ def receive():
         uid = req_json.get('sender').get('user_id')
         if (private_white_list and uid in private_white_list) or not private_white_list:
             logger.info(f"[qq]私聊-{uid}:{message}")
-            msg_text = aichat.chat(uid, message, 'qq')
+            msg_text = ai.main(uid, message, 'qq')
             send_private(uid, msg_text)
     elif req_json.get('message_type') == 'group':  # 群消息
         gid = req_json.get('group_id')  # 群号
@@ -47,9 +47,9 @@ def receive():
             _id = gid if group_session else uid
             if message[0] != "#":
                 message = f"[用户{uid}]说:" + message
-                msg_text = aichat.chat(_id, message, 'qq')
+                msg_text = ai.main(_id, message, 'qq')
             else:
-                msg_text = aichat.chat(_id, message, 'qq')
+                msg_text = ai.main(_id, message, 'qq')
             send_group(gid, uid, msg_text)
     elif req_json.get('post_type') == 'request':
         request_type = req_json.get('request_type')  # group

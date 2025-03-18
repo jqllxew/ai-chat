@@ -7,7 +7,7 @@ from io import BytesIO
 import requests
 from PIL import Image
 
-from aiimage.image_ai import ImageAI
+from ai.image.imageai import ImageAI
 from config import image as image_conf, display
 from journal import BaseDict
 from logger import logger
@@ -126,12 +126,8 @@ class Diffusion(ImageAI):
         self.uri = uri or self.model_id
         self.model_id = self.model_id or self.uri
 
-    def generate(self,query, jl, ipt=None):
-        if ipt is None:
-            return None
-        jl.prompt_len = ipt.prompt_len()
-        jl.before(query, ipt)
+    def generate(self, ipt) -> str:
         img, err = inference(uri=self.uri, **ipt.to_dict())
         if err:
-            return None, err
+            raise RuntimeError(err)
         return self.upload(img)

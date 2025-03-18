@@ -1,6 +1,6 @@
-from aiimage.dallE import DallE
-from aiimage.diffusion import Diffusion
-from aiimage.image_ai import ImageAI
+from ai.image.dalle import DallE
+from ai.image.diffusion import Diffusion
+from ai.image.imageai import ImageAI
 from config import image as image_conf, display
 from logger import logger
 
@@ -14,7 +14,7 @@ def u_change_model(uid, image_type='', from_type=None, model_id=None):
             uri=display(image_conf['diffusion']['uri']),
             model_id=model_id or display(image_conf['diffusion']['model-id']))
     elif 'diffusers' == image_type:
-        from aiimage.diffusers import Diffusers
+        from ai.image.diffusers import Diffusers
         user_models[uid] = Diffusers(
             uid=uid, from_type=from_type,
             model_id=model_id or display(image_conf['diffusers']['model-id']))
@@ -26,14 +26,14 @@ def u_change_model(uid, image_type='', from_type=None, model_id=None):
 
 def u_model(uid, from_type=None) -> ImageAI:
     if not user_models.get(uid):
-        u_change_model(uid, 'diffusion', from_type)
+        u_change_model(uid, 'dalle', from_type)
     return user_models.get(uid)
 
 
 def draw(uid: str, query: str, from_type: str, use_template=True) -> str:
-    reply = u_model(uid, from_type).reply(query)
-    if reply.err:
-        image = reply.err
+    reply, err = u_model(uid, from_type).reply(query)
+    if err:
+        return err
     elif from_type == 'qq':
         image = f"[CQ:image,file={reply.image}]"
     elif from_type == 'wx':
@@ -55,6 +55,5 @@ def draw(uid: str, query: str, from_type: str, use_template=True) -> str:
 __all__ = [
     "draw",
     "u_model",
-    "ImageAI",
-    "Diffusion"
+    "u_change_model"
 ]

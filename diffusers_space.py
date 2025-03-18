@@ -4,7 +4,7 @@ import gradio as gr
 import torch
 
 from plugin import youdao
-from aiimage.diffusers import prefix_prompt, inference
+from ai.image.diffusers import inference, prefix_prompt
 from config import image as image_conf, display
 from logger import logger
 

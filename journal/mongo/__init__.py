@@ -10,20 +10,6 @@ if _uri and _db:
     db = _client[_db]
     db = _Database(db)
 
-# class MongoBase(BaseDict):
-#     def __init__(self, _id=None, id: str = None):
-#         super().__init__()
-#         self.id = _id or id  # str id
-#         self._id = None  # ObjectId _id
-#
-#     def __setattr__(self, key, val):
-#         if isinstance(val, ObjectId):
-#             self.__dict__[key] = str(val)
-#         elif key == 'id' and isinstance(val, dict):
-#             self.__dict__[key] = val.get('$oid')
-#         else:
-#             self.__dict__[key] = val
-
 __all__ = [
     "db", "json_dumps", "to_json"
 ]

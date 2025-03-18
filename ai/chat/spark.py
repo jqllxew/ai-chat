@@ -11,8 +11,7 @@ from queue import Queue
 from time import mktime
 from urllib.parse import urlparse, urlencode
 from wsgiref.handlers import format_date_time
-import journal
-from aichat import ChatAI
+from ai.chat import ChatAI
 import websocket
 from config import chat as chat_conf, display, match, custom_token_len
 
@@ -151,8 +150,6 @@ class ChatSpark(ChatAI):
                                     on_open=on_open)
         prompt, token_len = self.get_prompt(query)
         message_queue = Queue()
-        # message_gen = message_generator(message_queue)
-        # next(message_gen)  # Start the generator
         ws.on_message = lambda _ws, message: message_queue.put(message)
         ws.appid = self.app_id
         ws.question = prompt

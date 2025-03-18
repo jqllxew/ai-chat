@@ -8,11 +8,10 @@ import PIL
 from PIL.Image import Image
 
 import journal
-from ai import ReplyAI
+from ai.base import ReplyAI
 from config import match, match_image, seed_pattern, lora_pattern, ch_char_pattern, width_height_pattern
-from cos import tx_cos
 from journal import BaseDict
-from plugin import youdao
+from plugin import youdao, tx_cos
 
 
 class ImagePrompt(BaseDict):
@@ -47,16 +46,15 @@ class ImagePrompt(BaseDict):
 
 
 class ImageReply(BaseDict):
-    def __init__(self, prompt, neg_prompt, size, seed, elapsed_sec, style):
+    def __init__(self, ipt: ImagePrompt, elapsed_sec, image, style):
         super().__init__()
-        self.prompt = prompt
-        self.neg_prompt = neg_prompt
-        self.size = size
-        self.seed = seed
+        self.prompt = ipt.prompt
+        self.neg_prompt = ipt.neg_prompt
+        self.size = f"{ipt.width}x{ipt.height}"
+        self.seed = ipt.seed
         self.elapsed_sec = elapsed_sec
+        self.image = image
         self.style = style
-        self.image = None
-        self.err = None
 
 
 class ImageAI(ReplyAI, ABC):
@@ -65,7 +63,7 @@ class ImageAI(ReplyAI, ABC):
         self.style = style
 
     @abstractmethod
-    def generate(self, query: str, jl, ipt=None):
+    def generate(self, ipt: ImagePrompt):
         raise NotImplementedError
 
     def upload(self, img: PIL.Image):
@@ -81,23 +79,23 @@ class ImageAI(ReplyAI, ABC):
         except Exception as e:
             return None, str(e)
 
-    def reply(self, query: str, jl: journal.Journal = None):
+    @journal.reply_log
+    def reply_fmt(self, query: str, _done=lambda x: x) -> (str, ImagePrompt):
         """
-        :param jl: journal环绕调用
+        :param _done:
         :param query: 绘画要求
         :return: reply image_path
         """
-        jl = journal.default_journal(**self.__dict__)
-        now = time.time()
         ipt = ImagePrompt(query)
-        url, err = self.generate(query, jl, ipt)
-        elapsed_sec = time.time() - now
-        reply = ImageReply(ipt.prompt, ipt.neg_prompt, f"{ipt.width}x{ipt.height}",
-                           ipt.seed, elapsed_sec, self.style)
-        if err:
-            reply.err = err
-            jl.error(err)
-        else:
-            reply.image = url
-            jl.after(reply)
-        return reply
+        url = self.generate(ipt)
+        _done(url)
+        return url, ipt
+
+    def reply(self, query: str) -> (ImageReply, str):
+        try:
+            now = time.time()
+            image_url, ipt = self.reply_fmt(query)
+            elapsed_sec = time.time() - now
+            return ImageReply(ipt, elapsed_sec, image_url, self.style), None
+        except Exception as e:
+            return None, str(e)

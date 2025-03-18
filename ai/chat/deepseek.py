@@ -3,7 +3,7 @@ from typing import Callable
 from openai import OpenAI, Stream
 from openai.types.chat import ChatCompletionChunk
 
-from aichat.gpt import ChatGPT
+from ai.chat.gpt import ChatGPT
 from config import chat as chat_conf, display
 
 _model_select = display(chat_conf['deepseek']['api']['model-select'])
@@ -12,26 +12,26 @@ if _api_key:
     client = OpenAI(api_key=_api_key, base_url="https://api.deepseek.com")
 
 
-def _stream(response: Stream[ChatCompletionChunk]):
-    flag = 0
-    for chunk in response:
-        delta = chunk.choices[0].delta
-        if hasattr(delta, 'reasoning_content') and delta.reasoning_content:
-            if flag == 0:
-                flag = 1
-                yield "<think>"
-            yield delta.reasoning_content or ''
-        else:
-            if flag == 1:
-                flag = 2
-                yield "</think>"
-            yield delta.content or ''
-
-
 class DeepSeekApi(ChatGPT):
 
     def __init__(self, model_id="deepseek-reasoner", default_system=None, **kw):
         super().__init__(model_id=model_id, default_system=default_system, model_select=_model_select, **kw)
+
+    @staticmethod
+    def _stream(response: Stream[ChatCompletionChunk]):
+        flag = 0
+        for chunk in response:
+            delta = chunk.choices[0].delta
+            if hasattr(delta, 'reasoning_content') and delta.reasoning_content:
+                if flag == 0:
+                    flag = 1
+                    yield "<think>"
+                yield delta.reasoning_content or ''
+            else:
+                if flag == 1:
+                    flag = 2
+                    yield "</think>"
+                yield delta.content or ''
 
     def generate(self, query, stream=False):
         prompt, token_len = self.get_prompt(query)
@@ -44,7 +44,7 @@ class DeepSeekApi(ChatGPT):
             temperature=1.2,  # 默认为1,0~2
         )
         if stream:
-            return _stream(res)
+            return self._stream(res)
         return res.choices[0].message.content
 
     def getClient(self):

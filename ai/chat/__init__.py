@@ -1,4 +1,3 @@
-import aiimage
 from config import chat as chat_conf, display
 from .chatai import ChatAI
 from .claude import ChatClaude
@@ -97,27 +96,9 @@ def u_model(uid, from_type=None, enable_ctx=True, enable_ins=True) -> ChatAI:
     return user_models.get(uid)
 
 
-def chat(uid: str, query: str, from_type: str):
-    query = query.strip()
-    if not query:
-        return "请说出您的问题哦~"
-    elif query.find("#draw") == 0:
-        return aiimage.draw(uid, query[5:], from_type)
-    elif query.find("#changechat") == 0:
-        chat_type = query.replace("#changechat", "", 1).strip()
-        err = u_change_model(uid, chat_type, from_type)
-        return err or f"changed to {chat_type}"
-    elif query.find("#changeimage") == 0:
-        image_type = query.replace("#changeimage", "", 1).strip()
-        err = aiimage.u_change_model(uid, image_type, from_type)
-        return err or f"changed to {image_type}"
-    reply, err = u_model(uid, from_type).reply(query)
-    return err or reply
-
-
 __all__ = [
-    "chat",
     "u_model",
+    "u_change_model",
     "ChatAI",
     "ChatClaude",
     "ChatGPT",

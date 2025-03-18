@@ -1,6 +1,5 @@
-import threading
 from typing import Callable
-from aichat.gpt import ChatGPT
+from ai.chat.gpt import ChatGPT
 
 tokenizer = None
 model = None

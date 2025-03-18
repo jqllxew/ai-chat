@@ -3,36 +3,29 @@ import json
 import time
 from io import BytesIO
 
-import httpx
-from openai import OpenAI
-from config import chat as chat_conf, display, match, match_image, custom_token_len
-from cos import tx_cos
-from logger import logger
 import plugin
+from config import match, match_image, custom_token_len
+from logger import logger
+from plugin import tx_cos
 from .chatai import ChatAI
-
-_model_select = display(chat_conf['openai']['gpt']['model-select'])
-_api_key = display(chat_conf['openai']['gpt']['api-key'])
-_api_proxy = display(chat_conf['openai']['gpt']['proxy'])
-if _api_key:
-    client = OpenAI(api_key=_api_key, http_client=httpx.Client(proxy=_api_proxy)) \
-        if _api_proxy else OpenAI(api_key=_api_key)
+from ..base import OpenAIClient
 
 
 class ChatGPT(ChatAI):
     def __init__(self, model_id="gpt-4o-mini", default_system=None, model_select=None, **kw):
         super().__init__(model_id=model_id, **kw)
+        self._client = OpenAIClient()
         self.model_id = model_id
         self.max_req_tokens = None
         self.max_resp_tokens = None
         self._cache_len = {}
         self.enable_function = False
-        self._model_select = model_select or _model_select
+        self._model_select = model_select or self._client.model_select
         self.set_model_attr(model_id)
         self.set_system(default_system)
 
     def getClient(self):
-        return client
+        return self._client.client
 
     def set_model_attr(self, model_id=None):
         model_attrs = self._model_select.get(model_id)
@@ -105,8 +98,6 @@ class ChatGPT(ChatAI):
             )
             response_message = response.choices[0].message
             if response_message.get("function_call"):
-                # Step 3: call the function
-                # Note: the JSON response may not always be valid; be sure to handle errors
                 function_name = response_message["function_call"]["name"]
                 function_to_call = plugin.function_map[function_name]
                 function_args = json.loads(response_message["function_call"]["arguments"])
@@ -149,7 +140,7 @@ class ChatGPT(ChatAI):
     def instruction(self, query):
         if "#help" == query:
             return super().instruction(query) + \
-                   "\n[#切换]切换模型（例gpt-4/gpt-3.5-turbo）" \
+                   "\n[#切换]切换模型" \
                    "\n[#system]设置助手角色&身份" \
                    "\n[#function]开关gpt外部函数" \
                    "\n[#addasst]向上下文中添加助手消息"

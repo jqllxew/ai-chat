@@ -2,16 +2,15 @@ import json
 
 import flask
 from flask import request, Blueprint
-
-import aichat
-from cos.tx_cos import tmp_sts
+import ai
+from plugin.tx_cos import tmp_sts
 
 test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 
 
 @test_api.route('/ctx_get/<uid>', methods=['GET'])
 def ctx_set(uid):
-    ctx = aichat.u_model(uid).ctx
+    ctx = ai.chat.u_model(uid).ctx
     # ctx.append(request.args.get('msg'))
     return json.dumps(list(ctx), ensure_ascii=False)
 
@@ -45,10 +44,10 @@ def stream():
     if not sid:
         sid = "test01"
     if qry.find("#") == 0:
-        res = aichat.chat(sid, qry, "test")
+        res = chat.chat(sid, qry, "test")
     else:
-        aichat.u_change_model(sid, model)
-        res = aichat.u_model(sid).reply_stream(qry)
+        chat.u_change_model(sid, model)
+        res = chat.u_model(sid).reply_stream(qry)
     resp = flask.make_response(res)
     return resp
 
@@ -56,7 +55,7 @@ def stream():
 # def chat_api():
 #     data = request.get_json()
 #     try:
-#         res = {'code': 0, 'data': aichat.chat('test01', data['msg'], 'test')}
+#         res = {'code': 0, 'data': chat.chat('test01', data['msg'], 'test')}
 #     except Exception as error:
 #         res = {'code': 1, 'msg': 'err: ' + str(error)}
 #     return json.dumps(res, ensure_ascii=False)

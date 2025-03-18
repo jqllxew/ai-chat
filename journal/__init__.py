@@ -12,7 +12,6 @@ def reply_log(func):
         except Exception as e:
             jl.error(e)
             raise e
-
     return wrapper
 
 

@@ -1,6 +1,6 @@
 import logging
 
-from aichat import ChatGPT, ChatSpark, Yi6b, ChatAI, ChatClaude, DeepSeekApi
+from ai.chat import ChatGPT, ChatSpark, Yi6b, ChatAI, ChatClaude, DeepSeekApi
 from config import chat as chat_conf, display
 from logger import logger
 from plugin.tts import speak
@@ -77,7 +77,7 @@ def create_yi():
 
 def create_glm():
     _conf = chat_conf['thudm']['glm']
-    from aichat.glm import ChatGLM
+    from ai.chat.glm import ChatGLM
     return ChatGLM(
         uid="test_glm",
         from_type="test",

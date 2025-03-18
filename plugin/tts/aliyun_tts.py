@@ -5,7 +5,7 @@ import os
 import time
 from urllib.parse import quote_plus
 from config import plugin as plugin_conf, display
-from cos import tx_cos
+from plugin import tx_cos
 from plugin.tts.aliyun_token import get_token
 
 tts_conf = plugin_conf['tts']

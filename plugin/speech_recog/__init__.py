@@ -9,7 +9,7 @@ from aliyunsdkcore.acs_exception.exceptions import ServerException
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
 from config import plugin as plugin_conf
-from cos import tx_cos
+from plugin import tx_cos
 
 recog_conf = plugin_conf['speech-recog']
 voices_base_path = recog_conf['voices-base-path']
