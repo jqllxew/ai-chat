@@ -3,6 +3,7 @@ from typing import Callable
 from openai import OpenAI, Stream
 from openai.types.chat import ChatCompletionChunk
 
+from ..chat import ChatAI
 from ai.chat.gpt import ChatGPT
 from config import chat as chat_conf, display
 
@@ -10,6 +11,17 @@ _model_select = display(chat_conf['deepseek']['api']['model-select'])
 _api_key = display(chat_conf['deepseek']['api']['api-key'])
 if _api_key:
     client = OpenAI(api_key=_api_key, base_url="https://api.deepseek.com")
+
+
+def _append_ctx(self, query=None, reply=None):
+    if isinstance(self, ChatAI):
+        query and self.ctx.append({"role": "user", "content": query})
+        if reply:
+            think = "</think>"
+            index = reply.find(think)
+            if index != -1:
+                reply = reply[index + len(think):].strip()
+            self.ctx.append({"role": "assistant", "content": reply})
 
 
 class DeepSeekApi(ChatGPT):
@@ -50,6 +62,9 @@ class DeepSeekApi(ChatGPT):
     def getClient(self):
         return client
 
+    def append_ctx(self, query=None, reply=None):
+        _append_ctx(self, query, reply)
+
 
 tokenizer = None
 model = None
@@ -58,14 +73,16 @@ model = None
 class DeepSeekLocal(ChatGPT):
 
     def __init__(self, model_id, max_tokens, max_resp_tokens, default_system=None, **kw):
+        import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
         super().__init__(model_id=model_id, default_system=default_system, model_select=_model_select, **kw)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_id = model_id
         global model, tokenizer
         if tokenizer is None:
             tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
         if model is None:
-            model = AutoModelForCausalLM.from_pretrained(self.model_id, trust_remote_code=True).half().cuda().eval()
+            model = AutoModelForCausalLM.from_pretrained(self.model_id, trust_remote_code=True).to(device).eval()
         self.max_tokens = max_tokens
         self.max_resp_tokens = max_resp_tokens
         self.max_req_tokens = max_tokens - max_resp_tokens
@@ -77,13 +94,7 @@ class DeepSeekLocal(ChatGPT):
         return tokenize
 
     def generate(self, query: str, stream=False):
-        return super().transformers_generate(tokenizer, model, query, stream)
+        return super().transformers_generate(tokenizer, model, query, stream, "<think>")
 
     def append_ctx(self, query=None, reply=None):
-        query and self.ctx.append({"role": "user", "content": query})
-        if reply:
-            think = "</think>"
-            index = reply.find(think)
-            if index != -1:
-                reply = reply[index + len(think):]
-            self.ctx.append({"role": "assistant", "content": reply})
+        _append_ctx(self, query, reply)

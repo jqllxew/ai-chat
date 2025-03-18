@@ -1,6 +1,6 @@
 import json
-
 import flask
+import numpy as np
 from flask import request, Blueprint
 import ai
 from plugin.tx_cos import tmp_sts
@@ -9,9 +9,10 @@ test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 
 
 @test_api.route('/ctx_get/<uid>', methods=['GET'])
-def ctx_set(uid):
+def ctx_get(uid):
+    if isinstance(uid, str) and uid.isdigit():
+        uid = np.int64(uid)
     ctx = ai.chat.u_model(uid).ctx
-    # ctx.append(request.args.get('msg'))
     return json.dumps(list(ctx), ensure_ascii=False)
 
 
@@ -44,18 +45,9 @@ def stream():
     if not sid:
         sid = "test01"
     if qry.find("#") == 0:
-        res = chat.chat(sid, qry, "test")
+        res = ai.main(sid, qry, "test")
     else:
-        chat.u_change_model(sid, model)
-        res = chat.u_model(sid).reply_stream(qry)
+        ai.chat.u_change_model(sid, model)
+        res = ai.chat.u_model(sid).reply_stream(qry)
     resp = flask.make_response(res)
     return resp
-
-# @test_api.route('/chat', methods=['POST'])
-# def chat_api():
-#     data = request.get_json()
-#     try:
-#         res = {'code': 0, 'data': chat.chat('test01', data['msg'], 'test')}
-#     except Exception as error:
-#         res = {'code': 1, 'msg': 'err: ' + str(error)}
-#     return json.dumps(res, ensure_ascii=False)

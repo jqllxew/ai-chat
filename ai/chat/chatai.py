@@ -132,8 +132,19 @@ class ChatAI(ReplyAI, ABC):
             traceback.print_exc()
             yield f"err: {e}"
 
-    def transformers_generate(self, tokenizer, model, query: str, stream=False):
+    @staticmethod
+    def _streamer(streamer, prefix=None):
+        flag = True
+        for x in streamer:
+            if flag:
+                yield prefix
+                flag = False
+            yield x
+
+    def transformers_generate(self, tokenizer, model, query: str, stream=False, prefix=None):
         from transformers import TextIteratorStreamer
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         prompt, token_len = self.get_prompt(query)
         input_ids = tokenizer.apply_chat_template(
             prompt,
@@ -141,11 +152,15 @@ class ChatAI(ReplyAI, ABC):
             add_generation_prompt=True,
             return_tensors='pt'
         )
+        pad_token_id = tokenizer.pad_token_id or tokenizer.eos_token_id
+        attention_mask = (input_ids != pad_token_id).long()
         streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
         _thread = threading.Thread(
             target=model.generate,
             kwargs={
-                "input_ids": input_ids.to('cuda'),
+                "input_ids": input_ids.to(device),
+                "attention_mask": attention_mask.to(device),
+                "pad_token_id": pad_token_id,
                 "max_new_tokens": token_len if token_len is not None else self.max_resp_tokens,
                 "streamer": streamer,
                 "do_sample": True,
@@ -153,12 +168,12 @@ class ChatAI(ReplyAI, ABC):
                 "no_repeat_ngram_size": 5,
                 "temperature": 0.7,
                 "top_k": 40,
-                "top_p": 0.8
+                "top_p": 0.8,
             }
         )
         _thread.start()
         if stream:
-            return streamer
+            return self._streamer(streamer, prefix)
         else:
             _thread.join()
             result = ''.join(streamer)
