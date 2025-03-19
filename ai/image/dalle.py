@@ -1,3 +1,8 @@
+from io import BytesIO
+
+import requests
+from PIL import Image
+
 from ai.base import OpenAIClient
 from ai.image.imageai import ImageAI
 
@@ -12,6 +17,7 @@ class DallE(ImageAI):
     def generate(self, ipt):
         ipt.width = 1792 if ipt.width > 1792 else 1024
         ipt.height = 1792 if ipt.height > 1792 else 1024
+        print(ipt.prompt)
         res = self.client.images.generate(
             model=self.model_id,
             prompt=ipt.prompt,

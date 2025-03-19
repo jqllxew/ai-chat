@@ -1,32 +1,24 @@
 import base64
 import io
 
-import anthropic
 from anthropic._types import NOT_GIVEN
+
+from ai.base import ClaudeClient
 from ai.chat.gpt import ChatGPT
-from config import chat as chat_conf, display, match_image, match, custom_token_len
+from config import match_image, match, custom_token_len
 from logger import logger
-
-_model_select = display(chat_conf['anthropic']['claude']['model-select'])
-_api_key = display(chat_conf['anthropic']['claude']['api-key'])
-_api_proxy = display(chat_conf['anthropic']['claude']['proxy'])
-
-if _api_key:
-    client = anthropic.Anthropic(
-        api_key=_api_key,
-        proxies=_api_proxy
-    )
 
 
 class ChatClaude(ChatGPT):
 
     def __init__(self, model_id="claude-3-5-sonnet-20241022", **kw):
-        super().__init__(model_id, model_select=_model_select, **kw)
+        self._client = ClaudeClient()
+        self._model_select = self._client.model_select
+        super().__init__(model_id, model_select=self._model_select, **kw)
         self.system_text = None
-        self._model_select = _model_select
 
     def _stream(self, prompt, token_len):
-        with client.messages.stream(
+        with self._client.client.messages.stream(
                 model=self.model_id,
                 max_tokens=token_len if token_len is not None else self.max_resp_tokens,
                 temperature=0.8,
@@ -37,7 +29,7 @@ class ChatClaude(ChatGPT):
                 yield x
 
     def _create(self, prompt, token_len):
-        message = client.messages.create(
+        message = self._client.client.messages.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,
             temperature=0.8,
@@ -87,16 +79,3 @@ class ChatClaude(ChatGPT):
 
     def set_system(self, text):
         self.system_text = text
-
-    def instruction(self, query):
-        if "#切换" in query:
-            model_id = query.replace("#切换", "", 1).strip()
-            try:
-                if model_id == "opus":
-                    model_id = "claude-3-5-opus-20241022"
-                elif model_id == "sonnet":
-                    model_id = "claude-3-5-sonnet-20241022"
-                return self.set_model_attr(model_id)
-            except Exception as e:
-                return str(e)
-        return super().instruction(query)

@@ -91,9 +91,9 @@ def match_image(query: str) -> (str, list[PIL.Image]):
             images.append(Image.open(res["data"]["file"]))
     if img_base64:
         base64_data = base64.b64decode(img_base64[0])
-        images.append(PIL.Image.open(BytesIO(base64_data)))
+        images.append(Image.open(BytesIO(base64_data)))
     if img_custom:
         print(img_custom[0])
         response2 = requests.get(img_custom[0])
-        images.append(PIL.Image.open(BytesIO(response2.content)))
+        images.append(Image.open(BytesIO(response2.content)))
     return images, query

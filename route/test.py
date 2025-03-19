@@ -1,6 +1,5 @@
 import json
 import flask
-import numpy as np
 from flask import request, Blueprint
 import ai
 from plugin.tx_cos import tmp_sts
@@ -11,7 +10,7 @@ test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 @test_api.route('/ctx_get/<uid>', methods=['GET'])
 def ctx_get(uid):
     if isinstance(uid, str) and uid.isdigit():
-        uid = np.int64(uid)
+        uid = int(uid)
     ctx = ai.chat.u_model(uid).ctx
     return json.dumps(list(ctx), ensure_ascii=False)
 
@@ -39,9 +38,7 @@ def stream():
     :return:
     """
     q = request.get_json()
-    qry = q.get("q")
-    model = q.get("model")
-    sid = q.get("sid")
+    qry, model, sid = q.get("q"), q.get("model"), q.get("sid")
     if not sid:
         sid = "test01"
     if qry.find("#") == 0:

@@ -14,29 +14,35 @@ from ..base import OpenAIClient
 class ChatGPT(ChatAI):
     def __init__(self, model_id="gpt-4o-mini", default_system=None, model_select=None, **kw):
         super().__init__(model_id=model_id, **kw)
-        self._client = OpenAIClient()
+        self._client = None
         self.model_id = model_id
         self.max_req_tokens = None
         self.max_resp_tokens = None
         self._cache_len = {}
         self.enable_function = False
-        self._model_select = model_select or self._client.model_select
+        self._model_select = model_select
         self.set_model_attr(model_id)
         self.set_system(default_system)
 
     def getClient(self):
+        if self._client is None:
+            self._client = OpenAIClient()
         return self._client.client
 
     def set_model_attr(self, model_id=None):
-        model_attrs = self._model_select.get(model_id)
-        if model_attrs:
-            max_tokens = model_attrs['max-tokens']
-            max_resp_tokens = model_attrs['max-resp-tokens']
-            self.model_id = model_id
-            self.max_resp_tokens = max_resp_tokens
-            self.max_req_tokens = max_tokens - max_resp_tokens
-            return f"[{self.uid}]已切换模型{model_id}"
-        return f"未找到{model_id}"
+        model_select = self._model_select
+        if model_select is None and self._client is not None:
+            model_select = self._client.model_select
+        if model_select:
+            model_attrs = model_select.get(self.model_id)
+            if model_attrs:
+                max_tokens = model_attrs['max-tokens']
+                max_resp_tokens = model_attrs['max-resp-tokens']
+                self.model_id = model_id
+                self.max_resp_tokens = max_resp_tokens
+                self.max_req_tokens = max_tokens - max_resp_tokens
+                return f"[{self.uid}]已切换模型{model_id}"
+            return f"未找到{model_id}"
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})
@@ -51,7 +57,9 @@ class ChatGPT(ChatAI):
 
     def get_prompt(self, query=""):
         if self.max_req_tokens is None:
-            raise RuntimeError(f"模型[{self.model_id}]不存在或未配置max_token")
+            self.set_model_attr(self.model_id)
+            if self.max_req_tokens is None:
+                raise RuntimeError(f"模型[{self.model_id}]不存在或未配置max_token")
         images, query = match_image(query)
         token_len, query = match(custom_token_len, query)
         if len(images):
@@ -88,43 +96,42 @@ class ChatGPT(ChatAI):
         return self.ctx, int(token_len[0]) if token_len else None
 
     def generate(self, query, stream=False):
+        client = self.getClient()
         prompt, token_len = self.get_prompt(query)
         if self.enable_function:
-            response = self.getClient().chat.completions.create(
+            response = client.chat.completions.create(
                 model=self.model_id,
                 messages=prompt,
                 functions=plugin.functions,
-                function_call="auto",  # auto is default, but we'll be explicit
+                function_call="auto"
             )
             response_message = response.choices[0].message
-            if response_message.get("function_call"):
-                function_name = response_message["function_call"]["name"]
+            if response_message.function_call:
+                function_name = response_message.function_call.name
                 function_to_call = plugin.function_map[function_name]
-                function_args = json.loads(response_message["function_call"]["arguments"])
+                function_args = json.loads(response_message.function_call.arguments)
                 function_response = function_to_call(function_args.get(plugin.param+"0"), self)
-                # Step 4: send the info on the function call and function response to GPT
-                self.ctx.append(response_message)  # extend conversation with assistant's reply
-                self.ctx.append(
-                    {
-                        "role": "function",
+                self.ctx.append({
+                    "role": "assistant",
+                    "function_call": {
                         "name": function_name,
-                        "content": function_response,
+                        "arguments": json.dumps(function_args)
                     }
-                )  # extend conversation with function response
-                prompt = self.get_prompt()
-        res = self.getClient().chat.completions.create(
+                })
+                self.ctx.append({
+                    "role": "function",
+                    "name": function_name,
+                    "content": json.dumps(function_response)
+                })
+                prompt, _ = self.get_prompt()
+        print(prompt)
+        res = client.chat.completions.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,
             messages=prompt,
             stream=stream,
             n=1,  # 默认为1,对一个提问生成多少个回答
             temperature=1.2,  # 默认为1,0~2
-            # top_p = 1,                # 默认为1,0~1，效果类似temperature，不建议都用
-            # stop = '',                # 遇到stop停止生成内容
-            # presence_penalty = 2,     # 默认为0,-2~2，越大越允许跑题
-            # frequency_penalty = 1.8,  # 默认为0,-2~2，越大越不允许复读机
-            # logit_bias = None,        # 默认无,影响特定词汇的生成概率？
-            # user = 'test',            # 默认无,用户名
         )
         if stream:
             return (x.choices[0].delta.content or '' for x in res)

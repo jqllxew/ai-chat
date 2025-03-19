@@ -5,7 +5,7 @@ from config import chat as chat_conf, display
 from logger import logger
 from plugin.tts import speak
 
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 
 def create_gpt():
@@ -135,8 +135,8 @@ def living_main():
 if __name__ == "__main__":
     # glm_main()
     # living_main()
-    # main(create_gpt())
-    main(create_deepseek_local())
+    main(create_gpt())
+    # main(create_deepseek_local())
     # main(create_claude())
     # main(create_spark())
     # main(create_yi())
