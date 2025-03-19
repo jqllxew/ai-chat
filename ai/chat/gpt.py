@@ -124,7 +124,6 @@ class ChatGPT(ChatAI):
                     "content": json.dumps(function_response)
                 })
                 prompt, _ = self.get_prompt()
-        print(prompt)
         res = client.chat.completions.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,
