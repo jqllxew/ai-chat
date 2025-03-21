@@ -12,9 +12,9 @@ from logger import logger
 class ChatClaude(ChatGPT):
 
     def __init__(self, model_id="claude-3-5-sonnet-20241022", **kw):
-        self._client = ClaudeClient()
-        self._model_select = self._client.model_select
-        super().__init__(model_id, model_select=self._model_select, **kw)
+        _client = ClaudeClient()
+        super().__init__(model_id, model_select=_client.model_select, **kw)
+        self._client = _client
         self.system_text = None
 
     def _stream(self, prompt, token_len):

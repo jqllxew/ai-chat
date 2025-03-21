@@ -77,15 +77,15 @@ class DeepSeekLocal(ChatGPT):
         super().__init__(model_id=model_id, default_system=default_system, **kw)
         self.model_id = model_id
         global model, tokenizer, device
+        if device is None:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
         if tokenizer is None:
             from transformers import AutoTokenizer
             tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
         if model is None:
             from transformers import AutoModelForCausalLM
             model = AutoModelForCausalLM.from_pretrained(self.model_id, trust_remote_code=True).to(device).eval()
-        if device is None:
-            import torch
-            device = "cuda" if torch.cuda.is_available() else "cpu"
         self.max_tokens = max_tokens
         self.max_resp_tokens = max_resp_tokens
         self.max_req_tokens = max_tokens - max_resp_tokens

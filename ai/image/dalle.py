@@ -1,8 +1,3 @@
-from io import BytesIO
-
-import requests
-from PIL import Image
-
 from ai.base import OpenAIClient
 from ai.image.imageai import ImageAI
 
@@ -15,9 +10,8 @@ class DallE(ImageAI):
 
     # Must be one of 1024x1024, 1792x1024, or 1024x1792 for dall-e-3 models.
     def generate(self, ipt):
-        ipt.width = 1792 if ipt.width > 1792 else 1024
-        ipt.height = 1792 if ipt.height > 1792 else 1024
-        print(ipt.prompt)
+        ipt.width = 1792 if ipt.width >= 1792 else 1024
+        ipt.height = 1792 if ipt.height >= 1792 else 1024
         res = self.client.images.generate(
             model=self.model_id,
             prompt=ipt.prompt,

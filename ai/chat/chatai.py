@@ -134,7 +134,7 @@ class ChatAI(ReplyAI, ABC):
 
     @staticmethod
     def _streamer(streamer, prefix=None):
-        flag = True
+        flag = prefix is not None
         for x in streamer:
             if flag:
                 yield prefix
