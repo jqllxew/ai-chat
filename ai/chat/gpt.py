@@ -14,7 +14,7 @@ from ..base import OpenAIClient
 class ChatGPT(ChatAI):
     def __init__(self, model_id="gpt-4o-mini", default_system=None, model_select=None, **kw):
         super().__init__(model_id=model_id, **kw)
-        self._client = self._client or None
+        self._client = None
         self.model_id = model_id
         self.max_req_tokens = None
         self.max_resp_tokens = None

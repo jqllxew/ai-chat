@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
+import anthropic
 import httpx
 from openai import OpenAI
+
 from config import chat as chat_conf, display
-import anthropic
 
 
 class ReplyAI(ABC):
@@ -46,6 +47,7 @@ class ClaudeClient:
         _api_key = display(chat_conf['anthropic']['claude']['api-key'])
         if _api_key:
             _api_proxy = display(chat_conf['anthropic']['claude']['proxy'])
-            self.client = anthropic.Anthropic(api_key=_api_key, proxies=_api_proxy)
+            _base_url = display(chat_conf['anthropic']['claude']['base-url'])
+            self.client = anthropic.Anthropic(api_key=_api_key, base_url=_base_url, proxies=_api_proxy)
         else:
             raise RuntimeError("未找到apiKey")

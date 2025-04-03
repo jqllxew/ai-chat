@@ -18,6 +18,7 @@ chat:
       default-system:
   anthropic:
     claude:
+      base-url: https://api.anthropic.com
       api-key:
       model-select:
         claude-3-opus-20240229:

@@ -11,7 +11,7 @@ from logger import logger
 
 class ChatClaude(ChatGPT):
 
-    def __init__(self, model_id="claude-3-5-sonnet-20241022", **kw):
+    def __init__(self, model_id="claude-3-7-sonnet-20250219-r", **kw):
         _client = ClaudeClient()
         super().__init__(model_id, model_select=_client.model_select, **kw)
         self._client = _client

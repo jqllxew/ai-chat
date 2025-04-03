@@ -5,7 +5,7 @@ from config import chat as chat_conf, display
 from logger import logger
 from plugin.tts import speak
 
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 
 def create_gpt():
