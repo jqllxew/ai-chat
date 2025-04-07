@@ -31,7 +31,9 @@ class ChatGPT(ChatAI):
 
     def set_model_attr(self, model_id=None):
         model_select = self._model_select
-        if model_select is None and self._client is not None:
+        if not self._client:
+            self.getClient()
+        if model_select is None and hasattr(self._client, "model_select"):
             model_select = self._client.model_select
         if model_select:
             model_attrs = model_select.get(self.model_id)
@@ -132,6 +134,7 @@ class ChatGPT(ChatAI):
             n=1,  # 默认为1,对一个提问生成多少个回答
             temperature=1.2,  # 默认为1,0~2
         )
+        print(res)
         if stream:
             return (x.choices[0].delta.content or '' for x in res)
         return res.choices[0].message.content

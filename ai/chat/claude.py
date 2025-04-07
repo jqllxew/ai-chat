@@ -36,6 +36,7 @@ class ChatClaude(ChatGPT):
             system=self.system_text or NOT_GIVEN,
             messages=prompt
         )
+        print(message)
         if len(message.content):
             return message.content[0].text
 

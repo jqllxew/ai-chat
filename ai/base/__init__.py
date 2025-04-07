@@ -35,7 +35,8 @@ class OpenAIClient:
         _api_key = display(chat_conf['openai']['gpt']['api-key'])
         if _api_key:
             _api_proxy = display(chat_conf['openai']['gpt']['proxy'])
-            self.client = OpenAI(api_key=_api_key, http_client=httpx.Client(proxy=_api_proxy)) \
+            _base_url = display(chat_conf['openai']['gpt']['base-url'])
+            self.client = OpenAI(api_key=_api_key, base_url=_base_url, http_client=httpx.Client(proxy=_api_proxy)) \
                 if _api_proxy else OpenAI(api_key=_api_key)
         else:
             raise RuntimeError("未找到apiKey")
