@@ -59,16 +59,16 @@ def _recog(image_path, request, is_local=False):
         return str(e)
 
 
-def get_tag(image_path, c=None, is_local=False):
+def get_tag(image_path, is_local=False):
     body = _recog(image_path, TaggingImageAdvanceRequest(), is_local)
     return ','.join([f'{x.value}:{x.confidence}' for x in body.data.tags])
 
 
-def get_scene(image_path, c=None, is_local=False):
+def get_scene(image_path, is_local=False):
     body = _recog(image_path, RecognizeSceneAdvanceRequest(), is_local)
     return ','.join([f'{x.value}:{x.confidence}' for x in body.data.tags])
 
 
-def get_character(image_path, c=None, is_local=False):
+def get_character(image_path, is_local=False):
     body = _recog(image_path, RecognizeCharacterAdvanceRequest(), is_local)
     return '\n'.join([x.text for x in body.data.results])

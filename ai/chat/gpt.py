@@ -35,16 +35,17 @@ class ChatGPT(ChatAI):
             self.getClient()
         if model_select is None and hasattr(self._client, "model_select"):
             model_select = self._client.model_select
+        max_tokens = 12384
+        max_resp_tokens = 512
         if model_select:
             model_attrs = model_select.get(self.model_id)
             if model_attrs:
                 max_tokens = model_attrs['max-tokens']
                 max_resp_tokens = model_attrs['max-resp-tokens']
-                self.model_id = model_id
-                self.max_resp_tokens = max_resp_tokens
-                self.max_req_tokens = max_tokens - max_resp_tokens
-                return f"[{self.uid}]已切换模型{model_id}"
-            return f"未找到{model_id}"
+        self.model_id = model_id
+        self.max_resp_tokens = max_resp_tokens
+        self.max_req_tokens = max_tokens - max_resp_tokens
+        return f"[{self.uid}]已切换模型{model_id}"
 
     def append_ctx(self, query=None, reply=None):
         query and self.ctx.append({"role": "user", "content": query})

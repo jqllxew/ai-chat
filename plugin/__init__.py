@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timedelta, timezone
 
 import ai
-from plugin import speech_recog, image_recog
 from logger import logger
 
 
@@ -29,10 +28,7 @@ def mongo_query(val0, val1):
 param = "val"
 function_map = {
     "get_current_time": get_current_time,
-    "image_generate": image_generate,
-    # "get_image_tag": image_recog.get_tag,
-    # "get_image_character": image_recog.get_character,
-    # "get_speech_text": speech_recog.get_speech_text,
+    "image_generate": image_generate
 }
 functions = [
     {
@@ -60,44 +56,5 @@ functions = [
                 },
             }, "required": [param+"0"],
         }
-    },
-    # {
-    #     "name": "get_image_tag",
-    #     "description": "传入图片url获取图片打标信息，返回格式{标签:置信度}",
-    #     "parameters": {
-    #         "type": "object",
-    #         "properties": {
-    #             param_name: {
-    #                 "type": "string",
-    #                 "description": "图片url",
-    #             },
-    #         }, "required": [param_name],
-    #     }
-    # },
-    # {
-    #     "name": "get_image_character",
-    #     "description": "传入图片url获取图片中的文字内容",
-    #     "parameters": {
-    #         "type": "object",
-    #         "properties": {
-    #             param_name: {
-    #                 "type": "string",
-    #                 "description": "图片url",
-    #             },
-    #         }, "required": [param_name],
-    #     }
-    # },
-    # {
-    #     "name": "get_speech_text",
-    #     "description": "传入音频返回识别的文本信息",
-    #     "parameters": {
-    #         "type": "object",
-    #         "properties": {
-    #             param_name: {
-    #                 "type": "string",
-    #                 "description": "语音文件(支持.mp3,.amr)路径",
-    #             },
-    #         }, "required": [param_name],
-    #     }
-    # },
+    }
 ]

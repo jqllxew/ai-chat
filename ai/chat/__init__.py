@@ -14,6 +14,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
         if type(user_models.get(uid)) is not ChatGPT:
             user_models[uid] = ChatGPT(
                 uid=uid,
+                model_id=display(chat_conf['openai']['gpt']['default']),
                 default_system=display(chat_conf['openai']['gpt']['default-system']),
                 from_type=from_type,
                 enable_ctx=enable_ctx,

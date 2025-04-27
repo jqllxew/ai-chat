@@ -44,12 +44,8 @@ def upload(key, binary_data):
         Key=key,
     )
     if response.get('ETag'):
-        return f"{res_url_prefix()}/{key}"
+        return f"https://{bucket}.cos.{region}.myqcloud.com/{key}"
     return ""
-
-
-def res_url_prefix():
-    return f"https://{bucket}.cos.{region}.myqcloud.com"
 
 
 def tmp_sts(duration_seconds) -> dict:

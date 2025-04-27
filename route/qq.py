@@ -9,7 +9,7 @@ from flask import request, Blueprint
 import ai
 from config import qq as qq_conf, match, cq_speech_md5_pattern
 from logger import logger
-from plugin import speech_recog
+from plugin.recog import get_speech_text, recog_voices_path
 from plugin.tts import tts_url, tts_cos
 
 qq_api = Blueprint("qq_api", __name__)
@@ -28,7 +28,7 @@ def receive():
     message = req_json.get('raw_message')
     _speech, _ = match(cq_speech_md5_pattern, message)
     if _speech and group_speech_reply:
-        message = speech_recog.get_speech_text(get_record(_speech[0]))
+        message = get_speech_text(get_record(_speech[0]))
     if req_json.get('message_type') == 'private':  # 私聊信息
         uid = req_json.get('sender').get('user_id')
         if (private_white_list and uid in private_white_list) or not private_white_list:
@@ -84,6 +84,7 @@ def send_private(uid, message):
             msg_text = f"[CQ:record,file={tts_url(ssml)}]"
         else:
             msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
+        print(msg_text)
     else:
         msg_text = message
     res = requests.post(url=cq_http_url + "/send_private_msg",
@@ -144,7 +145,7 @@ def get_record(file_md5):
         return None
     file_url = res['data']['url']
     download_url = cq_http_url + file_url
-    local_path = speech_recog.voices_base_path + file_url
+    local_path = recog_voices_path + file_url
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
     download_res = requests.get(download_url)
     if download_res.status_code == 200:

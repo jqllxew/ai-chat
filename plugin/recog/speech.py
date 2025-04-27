@@ -1,5 +1,3 @@
-# 2023/10/19
-# -*- coding: utf8 -*-
 import json
 import os
 import time
@@ -12,7 +10,7 @@ from config import plugin as plugin_conf
 from plugin import tx_cos
 
 recog_conf = plugin_conf['speech-recog']
-voices_base_path = recog_conf['voices-base-path']
+recog_voices_path = recog_conf['voices-base-path']
 access_key_id = recog_conf['aliyun']['access-key-id']
 access_key_secret = recog_conf['aliyun']['access-key-secret']
 app_key = recog_conf['aliyun']['app-key']
@@ -42,9 +40,9 @@ STATUS_QUEUEING = "QUEUEING"
 
 
 def _upload(local_path):
-    if not os.path.exists(voices_base_path):
+    if not os.path.exists(recog_voices_path):
         return None
-    with open(voices_base_path+local_path, mode='rb') as f:
+    with open(recog_voices_path+local_path, mode='rb') as f:
         _voice = f.read()
         store_dir = tx_cos.store_dir('voices')
         return tx_cos.upload(f"{store_dir}/{local_path}", _voice)
@@ -72,7 +70,7 @@ def get_speech_text(local_path=None, file_path=None, c=None):
     task = json.dumps(task)
     postRequest.add_body_params(KEY_TASK, task)
     taskId = ""
-    try :
+    try:
         postResponse = client.do_action_with_exception(postRequest)
         postResponse = json.loads(postResponse)
         statusText = postResponse[KEY_STATUS_TEXT]
@@ -83,9 +81,9 @@ def get_speech_text(local_path=None, file_path=None, c=None):
             print("录音文件识别请求失败！")
             return
     except ServerException as e:
-        print (e)
+        print(e)
     except ClientException as e:
-        print (e)
+        print(e)
     # 创建CommonRequest，设置任务ID。
     getRequest = CommonRequest()
     getRequest.set_domain(DOMAIN)
@@ -109,9 +107,9 @@ def get_speech_text(local_path=None, file_path=None, c=None):
                 # 退出轮询
                 break
         except ServerException as e:
-            print (e)
+            print(e)
         except ClientException as e:
-            print (e)
+            print(e)
     if statusText == STATUS_SUCCESS:
         print("录音文件识别成功！")
         return getResponse[KEY_RESULT]['Sentences'][0]['Text']
