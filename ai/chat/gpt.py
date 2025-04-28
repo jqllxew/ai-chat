@@ -4,7 +4,7 @@ import time
 from io import BytesIO
 
 import plugin
-from config import match, match_image, custom_token_len
+from config import match, match_reply, match_image, custom_token_len
 from logger import logger
 from plugin import tx_cos
 from .chatai import ChatAI
@@ -59,30 +59,32 @@ class ChatGPT(ChatAI):
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
-        if self.max_req_tokens is None:
-            self.set_model_attr(self.model_id)
-            if self.max_req_tokens is None:
-                raise RuntimeError(f"模型[{self.model_id}]不存在或未配置max_token")
-        images, query = match_image(query)
+        has_reply, query = match_reply(query)
         token_len, query = match(custom_token_len, query)
-        if len(images):
-            img = images[0]
-            buffer = BytesIO()
-            img.save(buffer, format="jpeg")
-            url = tx_cos.upload(
-                f"{self.model_id}/{self.uid}/{int(time.time() * 1000)}.jpg",
-                buffer.getvalue()
-            )
-            logger.info(f"[{self.model_id}] img_url: {url}")
-            query = [{
-                "type": "text",
-                "text": query
-            }, {
-                "type": "image_url",
-                "image_url": {
-                    "url": url
-                }
-            }]
+        if has_reply:
+            images, query = match_image(query)
+            if len(images):
+                img = images[0]
+                buffer = BytesIO()
+                img.save(buffer, format="jpeg")
+                url = tx_cos.upload(
+                    f"{self.model_id}/{self.uid}/{int(time.time() * 1000)}.jpg",
+                    buffer.getvalue()
+                )
+                logger.info(f"[{self.model_id}] img_url: {url}")
+                query = [{
+                    "type": "text",
+                    "text": query
+                }, {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": url
+                    }
+                }]
+        else:
+            images, query = match_image(query)
+            if not query:
+                return None, token_len
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_req_tokens:
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
@@ -101,6 +103,8 @@ class ChatGPT(ChatAI):
     def generate(self, query, stream=False):
         client = self.getClient()
         prompt, token_len = self.get_prompt(query)
+        if not prompt:
+            return None
         if self.enable_function:
             response = client.chat.completions.create(
                 model=self.model_id,

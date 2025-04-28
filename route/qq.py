@@ -47,9 +47,7 @@ def receive():
             _id = gid if group_session else uid
             if message[0] != "#":
                 message = f"[用户{uid}]说:" + message
-                msg_text = ai.main(_id, message, 'qq')
-            else:
-                msg_text = ai.main(_id, message, 'qq')
+            msg_text = ai.main(_id, message, 'qq')
             send_group(gid, uid, msg_text)
     elif req_json.get('post_type') == 'request':
         request_type = req_json.get('request_type')  # group
@@ -78,34 +76,36 @@ def _find_ssml(text):
 
 
 def send_private(uid, message):
-    ssml = _find_ssml(message)
-    if ssml:
-        if len(ssml) < 127:
-            msg_text = f"[CQ:record,file={tts_url(ssml)}]"
+    if message:
+        ssml = _find_ssml(message)
+        if ssml:
+            if len(ssml) < 127:
+                msg_text = f"[CQ:record,file={tts_url(ssml)}]"
+            else:
+                msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
+            print(msg_text)
         else:
-            msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
-        print(msg_text)
-    else:
-        msg_text = message
-    res = requests.post(url=cq_http_url + "/send_private_msg",
-                        data={'user_id': int(uid), 'message': msg_text}).json()
-    if res.get('status') != "ok":
-        logger.warn(f"[qq]send_private err:{res}")
+            msg_text = message
+        res = requests.post(url=cq_http_url + "/send_private_msg",
+                            data={'user_id': int(uid), 'message': msg_text}).json()
+        if res.get('status') != "ok":
+            logger.warn(f"[qq]send_private err:{res}")
 
 
 def send_group(gid, uid, message):
-    ssml = _find_ssml(message)
-    if ssml:
-        if len(ssml) < 127:
-            msg_text = f"[CQ:record,file={tts_url(ssml)}]"
+    if message:
+        ssml = _find_ssml(message)
+        if ssml:
+            if len(ssml) < 127:
+                msg_text = f"[CQ:record,file={tts_url(ssml)}]"
+            else:
+                msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
         else:
-            msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
-    else:
-        msg_text = f"[CQ:at,qq={uid}]\n" + message
-    res = requests.post(url=cq_http_url + "/send_group_msg",
-                        data={'group_id': int(gid), 'message': msg_text}).json()
-    if res["status"] != "ok":
-        logger.warn(f"[qq]send_group err:{res}")
+            msg_text = f"[CQ:at,qq={uid}]\n" + message
+        res = requests.post(url=cq_http_url + "/send_group_msg",
+                            data={'group_id': int(gid), 'message': msg_text}).json()
+        if res["status"] != "ok":
+            logger.warn(f"[qq]send_group err:{res}")
 
 
 def handle_friend_add(flag, approve):

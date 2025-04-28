@@ -103,6 +103,8 @@ class ChatAI(ReplyAI, ABC):
             yield ins
         else:
             res = self.generate(query, stream)
+            if not res:
+                yield None
             if stream:
                 res_text = ""
                 for x in res:

@@ -68,6 +68,7 @@ cq_speech_md5_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1.*]"
 cq_image_url_pattern = "\\[CQ:image,file=(.+?),.*]"
 custom_image_url_pattern = "img=(.*)"
 custom_token_len = "token=(\\d+)"  # 自定义token数
+reply_pattern = "\\[CQ:reply,id=(\\d+)]"
 
 
 def match(pattern, query):
@@ -78,7 +79,20 @@ def match(pattern, query):
     return None, query
 
 
-def match_image(query: str) -> (str, list[PIL.Image]):
+def match_reply(query: str) -> (bool, str):
+    reply_id, query = match(reply_pattern, query)
+    if reply_id:
+        res = requests.post(url=qq['cq-http-url'] + "/get_msg",
+                            data={'message_id': reply_id}).json()
+        flag = res["status"] == "ok"
+        if flag:
+            raw_message = res["data"]["raw_message"]
+            query = f"{raw_message}\n{query}"
+        return flag, query
+    return False, query
+
+
+def match_image(query: str) -> (list[PIL.Image], str):
     img_cq_id, query = match(cq_image_url_pattern, query)
     img_base64, query = match(base64_image_pattern, query)
     img_custom, query = match(custom_image_url_pattern, query)
@@ -86,14 +100,12 @@ def match_image(query: str) -> (str, list[PIL.Image]):
     if img_cq_id:
         res = requests.post(url=qq['cq-http-url'] + "/get_image",
                             data={'file': img_cq_id}).json()
-        print(res)
         if res["status"] == "ok":
             images.append(Image.open(res["data"]["file"]))
     if img_base64:
         base64_data = base64.b64decode(img_base64[0])
         images.append(Image.open(BytesIO(base64_data)))
     if img_custom:
-        print(img_custom[0])
         response2 = requests.get(img_custom[0])
         images.append(Image.open(BytesIO(response2.content)))
     return images, query

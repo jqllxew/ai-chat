@@ -7,6 +7,7 @@ chat:
   openai:
     gpt:
       base-url: https://api.openai.com/v1/
+      default: gpt-4o-mini
       api-key:
       model-select:
         gpt-4o-mini:
@@ -22,17 +23,11 @@ chat:
       base-url: https://api.anthropic.com
       api-key:
       model-select:
-        claude-3-opus-20240229:
-          max-tokens: 8192
-          max-resp-tokens: 512
-        claude-3-sonnet-20240229:
-          max-tokens: 12384
-          max-resp-tokens: 512
         claude-3-5-sonnet-20241022:
           max-tokens: 12384
           max-resp-tokens: 512
-        claude-3-haiku:
-          max-tokens: 8192
+        claude-3-7-sonnet-20250219:
+          max-tokens: 12384
           max-resp-tokens: 512
       proxy: http://127.0.0.1:7890
       default-system:
