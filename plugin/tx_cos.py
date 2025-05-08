@@ -1,6 +1,9 @@
 import logging
 from datetime import datetime
+from io import BytesIO
 
+import PIL
+from PIL import Image
 from qcloud_cos import CosS3Client, CosConfig, cos_client
 from config import cos as cos_conf, display
 from logger import logger
@@ -35,12 +38,19 @@ def store_dir(res_type):
     return ""
 
 
-def upload(key, binary_data):
+def upload(key, data):
     if not client:
         raise RuntimeError("[COS] cos客户端未被创建..")
+    if isinstance(data, str):
+        return data
+    buffer = BytesIO()
+    if isinstance(data, PIL.Image.Image):
+        data.save(buffer, format="jpeg")
+    else:
+        raise RuntimeError("未知上传类型")
     response = client.put_object(
         Bucket=bucket,
-        Body=binary_data,
+        Body=buffer.getvalue(),
         Key=key,
     )
     if response.get('ETag'):

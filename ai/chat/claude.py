@@ -1,6 +1,8 @@
 import base64
 import io
 
+import requests
+from PIL import Image
 from anthropic._types import NOT_GIVEN
 
 from ai.base import ClaudeClient
@@ -45,7 +47,12 @@ class ChatClaude(ChatGPT):
         token_len, query = match(custom_token_len, query)
         if len(images):
             buffered = io.BytesIO()
-            images[0].save(buffered, format="JPEG")
+
+            if isinstance(images[0], str):
+                img = Image.open(io.BytesIO(requests.get(images[0]).content))
+            else:
+                img = images[0]
+            img.save(buffered, format="JPEG")
             # 获得字节流的内容
             image_content = buffered.getvalue()
             base64_image = base64.b64encode(image_content).decode("utf-8")

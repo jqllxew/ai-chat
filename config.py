@@ -84,19 +84,17 @@ def match_reply(query: str) -> (bool, str):
     if reply_id:
         res = requests.post(url=qq['cq-http-url'] + "/get_msg",
                             data={'message_id': reply_id}).json()
-        flag = res["status"] == "ok"
-        if flag:
+        if res["status"] == "ok":
             raw_message = res["data"]["raw_message"]
             query = f"{raw_message}\n{query}"
-        return flag, query
-    return False, query
+    return query
 
 
-def match_image(query: str) -> (list[PIL.Image], str):
+def match_image(query: str) -> (list, str):
     img_cq_id, query = match(cq_image_url_pattern, query)
     img_base64, query = match(base64_image_pattern, query)
     img_custom, query = match(custom_image_url_pattern, query)
-    images: list[PIL.Image] = []
+    images: list = []
     if img_cq_id:
         res = requests.post(url=qq['cq-http-url'] + "/get_image",
                             data={'file': img_cq_id}).json()
@@ -106,6 +104,7 @@ def match_image(query: str) -> (list[PIL.Image], str):
         base64_data = base64.b64decode(img_base64[0])
         images.append(Image.open(BytesIO(base64_data)))
     if img_custom:
-        response2 = requests.get(img_custom[0])
-        images.append(Image.open(BytesIO(response2.content)))
+        # response2 = requests.get(img_custom[0])
+        # images.append(Image.open(BytesIO(response2.content)))
+        images.append(img_custom[0])
     return images, query

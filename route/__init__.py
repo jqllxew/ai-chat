@@ -17,7 +17,9 @@ server.logger.addHandler(handler)
 
 @server.route('/', methods=['GET'])
 def index():
-    return f"<h1>AI-chat<h1/>"
+    return """<h1>AI-chat<h1/>
+    <input id='file' type='file'></input>
+    """
 
 
 __all__ = ["server"]

@@ -59,17 +59,14 @@ class ChatGPT(ChatAI):
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
-        has_reply, query = match_reply(query)
+        query = match_reply(query)
         token_len, query = match(custom_token_len, query)
-        if has_reply:
-            images, query = match_image(query)
-            if len(images):
-                img = images[0]
-                buffer = BytesIO()
-                img.save(buffer, format="jpeg")
+        images, query = match_image(query)
+        if len(images):
+            if query:
                 url = tx_cos.upload(
                     f"{self.model_id}/{self.uid}/{int(time.time() * 1000)}.jpg",
-                    buffer.getvalue()
+                    images[0]
                 )
                 logger.info(f"[{self.model_id}] img_url: {url}")
                 query = [{
@@ -81,9 +78,7 @@ class ChatGPT(ChatAI):
                         "url": url
                     }
                 }]
-        else:
-            images, query = match_image(query)
-            if not query:
+            else:
                 return None, token_len
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_req_tokens:
@@ -139,7 +134,6 @@ class ChatGPT(ChatAI):
             n=1,  # 默认为1,对一个提问生成多少个回答
             temperature=1.2,  # 默认为1,0~2
         )
-        print(res)
         if stream:
             return (x.choices[0].delta.content or '' for x in res)
         return res.choices[0].message.content
