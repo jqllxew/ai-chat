@@ -177,4 +177,8 @@ class ChatGPT(ChatAI):
             self.append_ctx(reply=add_ctx)
             return "[{}]已添加助手消息，会话信息如下：\n总轮数为{}\n总字符(or tokens)长度为{}" \
                 .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
+        elif "#apikey" in query:
+            apikey = query.replace("#apikey", "", 1).strip()
+            self.getClient().apikey = apikey
         return super().instruction(query)
+
