@@ -179,6 +179,7 @@ class ChatGPT(ChatAI):
                 .format(self.uid, len(self.ctx), self.get_prompt_len(self.join_ctx()))
         elif "#apikey" in query:
             apikey = query.replace("#apikey", "", 1).strip()
-            self.getClient().apikey = apikey
+            self.getClient().api_key = apikey
+            return "セットアップ完了"
         return super().instruction(query)
 

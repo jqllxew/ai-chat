@@ -35,6 +35,7 @@ def create_claude():
     return ChatClaude(
         uid="test_claude",
         from_type="test",
+        model_id=chat_conf['anthropic']['claude']['default'],
         enable_ins=True,
     )
 
@@ -135,8 +136,8 @@ def living_main():
 if __name__ == "__main__":
     # glm_main()
     # living_main()
-    main(create_gpt())
+    # main(create_gpt())
     # main(create_deepseek_local())
-    # main(create_claude())
+    main(create_claude())
     # main(create_spark())
     # main(create_yi())

@@ -35,10 +35,7 @@ class ChatAI(ReplyAI, ABC):
         return query, None
 
     def encode_len(self) -> Callable[[str], int]:
-        try:
-            encoding = tiktoken.encoding_for_model(self.model_id)
-        except:
-            encoding = tiktoken.get_encoding("cl100k_base")
+        encoding = tiktoken.get_encoding("cl100k_base")
 
         def tiktoken_encode(value) -> int:
             return len(encoding.encode(value))
