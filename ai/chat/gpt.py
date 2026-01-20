@@ -3,6 +3,8 @@ import json
 import time
 from io import BytesIO
 
+from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
+
 import plugin
 from config import match, match_reply, match_image, custom_token_len
 from logger import logger
@@ -104,27 +106,36 @@ class ChatGPT(ChatAI):
             response = client.chat.completions.create(
                 model=self.model_id,
                 messages=prompt,
-                functions=plugin.functions,
-                function_call="auto"
+                tools=plugin.tools,
+                tool_choice="auto"
             )
-            response_message = response.choices[0].message
-            if response_message.function_call:
-                function_name = response_message.function_call.name
-                function_to_call = plugin.function_map[function_name]
-                function_args = json.loads(response_message.function_call.arguments)
-                function_response = function_to_call(function_args.get(plugin.param+"0"), self)
-                self.ctx.append({
-                    "role": "assistant",
-                    "function_call": {
-                        "name": function_name,
-                        "arguments": json.dumps(function_args)
-                    }
-                })
-                self.ctx.append({
-                    "role": "function",
-                    "name": function_name,
-                    "content": json.dumps(function_response)
-                })
+            response_message: ChatCompletionMessage = response.choices[0].message
+            tool_calls: list[ChatCompletionMessageToolCall] = response_message.tool_calls
+            if tool_calls:
+                for call in tool_calls:
+                    tool_name = call.function.name
+                    tool_args = json.loads(call.function.arguments)
+                    # 执行实际函数
+                    func = plugin.tool_map[tool_name]
+                    result = func(tool_args.get(plugin.param + "0"), self)
+                    # assistant 调用工具记录
+                    self.ctx.append({
+                        "role": "assistant",
+                        "tool_calls": [{
+                            "id": call.id,
+                            "type": "function",
+                            "function": {
+                                "name": tool_name,
+                                "arguments": json.dumps(tool_args)
+                            }
+                        }]
+                    })
+                    # 工具执行返回
+                    self.ctx.append({
+                        "role": "tool",
+                        "tool_call_id": call.id,
+                        "content": result
+                    })
                 prompt, _ = self.get_prompt()
         res = client.chat.completions.create(
             model=self.model_id,
