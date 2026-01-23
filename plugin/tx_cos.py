@@ -44,10 +44,15 @@ def upload(key, data):
     if isinstance(data, str):
         return data
     buffer = BytesIO()
+    # 图片类型
     if isinstance(data, PIL.Image.Image):
         data.save(buffer, format="jpeg")
+    # bytes 类型（比如 requests.post 返回的 resp.content）
+    elif isinstance(data, (bytes, bytearray)):
+        buffer.write(data)
+    # 其他类型可以继续扩展
     else:
-        raise RuntimeError("未知上传类型")
+        raise RuntimeError(f"未知上传类型: {type(data)}")
     response = client.put_object(
         Bucket=bucket,
         Body=buffer.getvalue(),

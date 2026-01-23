@@ -11,6 +11,7 @@ from config import qq as qq_conf, match, cq_speech_md5_pattern
 from logger import logger
 from plugin.recog import get_speech_text, recog_voices_path
 from plugin.tts import tts_url, tts_cos
+from plugin.tts.speechify_tts import speechify_tts
 
 qq_api = Blueprint("qq_api", __name__)
 cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
@@ -70,42 +71,60 @@ def receive():
     })
 
 
-def _find_ssml(text):
-    match = re.search(r'<speak.+?>.*?</speak>', text, flags=re.DOTALL)
-    return match.group() if match else None
+def _clamp_int(value, min_v=0, max_v=15, default=5):
+    try:
+        v = int(value)
+        return max(min_v, min(max_v, v))
+    except (TypeError, ValueError):
+        return default
+
+
+def _find_speech(text):
+    pattern = re.compile(
+        r'<speech\s+([^>]*)>(.*?)</speech>',
+        flags=re.DOTALL
+    )
+    _match = pattern.search(text)
+    if not _match:
+        return None
+
+    attr_str, content = _match.groups()
+    attrs = dict(re.findall(r'(\w+)="([^"]+)"', attr_str))
+
+    return {
+        "pitch": _clamp_int(attrs.get("pitch")),
+        "speed": _clamp_int(attrs.get("speed")),
+        "prompt": attrs.get("prompt"),
+        "text": content.strip()
+    }
 
 
 def send_private(uid, message):
     if message:
-        ssml = _find_ssml(message)
-        if ssml:
-            if len(ssml) < 127:
-                msg_text = f"[CQ:record,file={tts_url(ssml)}]"
-            else:
-                msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
-            print(msg_text)
-        else:
-            msg_text = message
         res = requests.post(url=cq_http_url + "/send_private_msg",
-                            data={'user_id': int(uid), 'message': msg_text}).json()
+                            data={'user_id': int(uid), 'message': message}).json()
         if res.get('status') != "ok":
             logger.warn(f"[qq]send_private err:{res}")
+        speech = _find_speech(message)
+        print(f"speech: {speech}")
+        if speech and speech.get("text"):
+            speech_qq = f"[CQ:record,file={speechify_tts(uid, **speech)}]"
+            requests.post(url=cq_http_url + "/send_private_msg",
+                          data={'user_id': int(uid), 'message': speech_qq}).json()
 
 
 def send_group(gid, uid, message):
     if message:
-        ssml = _find_ssml(message)
-        if ssml:
-            if len(ssml) < 127:
-                msg_text = f"[CQ:record,file={tts_url(ssml)}]"
-            else:
-                msg_text = f"[CQ:record,file={tts_cos(ssml, uid)}]"
-        else:
-            msg_text = f"[CQ:at,qq={uid}]\n" + message
+        msg_text = f"[CQ:at,qq={uid}]\n" + message
         res = requests.post(url=cq_http_url + "/send_group_msg",
                             data={'group_id': int(gid), 'message': msg_text}).json()
         if res["status"] != "ok":
             logger.warn(f"[qq]send_group err:{res}")
+        speech = _find_speech(message)
+        if speech and speech.get("text"):
+            speech_qq = f"[CQ:record,file={speechify_tts(uid, **speech)}]"
+            requests.post(url=cq_http_url + "/send_group_msg",
+                          data={'group_id': int(gid), 'message': speech_qq}).json()
 
 
 def handle_friend_add(flag, approve):
