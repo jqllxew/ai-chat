@@ -7,7 +7,6 @@ from PIL import Image
 from flask import request, Blueprint
 import ai
 from plugin import tx_cos
-from plugin.tx_cos import tmp_sts
 
 test_api = Blueprint(name="test_api", import_name=__name__, url_prefix='/test')
 
@@ -18,9 +17,10 @@ def ctx_get(uid):
     ctx = ai.chat.u_model(uid).ctx
     return json.dumps(list(ctx), ensure_ascii=False)
 
-@test_api.route('/cos_sts', methods=['GET'])
-def cos_temp():
-    return json.dumps(tmp_sts(300), ensure_ascii=False)
+# @test_api.route('/cos_sts', methods=['GET'])
+# def cos_temp():
+#     return json.dumps(tmp_sts(300), ensure_ascii=False)
+
 
 def _stream(qry, model, sid):
     if not sid:

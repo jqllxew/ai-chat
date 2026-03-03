@@ -8,8 +8,9 @@ from config import chat as chat_conf, display
 
 
 class ReplyAI(ABC):
-    def __init__(self, uid, from_type, model_id=None):
+    def __init__(self, uid, from_type, model_id=None, is_group=False):
         self.uid = uid
+        self.is_group = is_group
         self.from_type = from_type
         self.model_id = model_id
 

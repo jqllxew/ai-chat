@@ -53,7 +53,8 @@ chat = ConfDict(_data.get('chat'))
 qq = ConfDict(_data.get('qq'))
 wx = ConfDict(_data.get('wx'))
 image = ConfDict(_data.get('image'))
-cos = ConfDict(_data.get('cos'))
+# cos = ConfDict(_data.get('cos'))
+tos = ConfDict(_data.get('tos'))
 fanyi = ConfDict(_data.get('fanyi'))
 journal = ConfDict(_data.get('journal'))
 plugin = ConfDict(_data.get('plugin'))
@@ -68,7 +69,7 @@ cq_speech_md5_pattern = "\\[CQ:.*file=([a-fA-F\\d]{32}).*voice_codec=1.*]"
 cq_image_url_pattern = "\\[CQ:image,file=(.+?),.*]"
 custom_image_url_pattern = "img=(.*)"
 custom_token_len = "token=(\\d+)"  # 自定义token数
-reply_pattern = "\\[CQ:reply,id=(\\d+)]"
+cq_reply_pattern = "\\[CQ:reply,id=(\\d+)]"
 
 
 def match(pattern, query):
@@ -79,27 +80,22 @@ def match(pattern, query):
     return None, query
 
 
-def match_reply(query: str) -> (bool, str):
-    reply_id, query = match(reply_pattern, query)
-    if reply_id:
-        res = requests.post(url=qq['cq-http-url'] + "/get_msg",
-                            data={'message_id': reply_id}).json()
-        if res["status"] == "ok":
-            raw_message = res["data"]["raw_message"]
-            query = f"{raw_message}\n{query}"
-    return query
-
-
 def match_image(query: str) -> (list, str):
-    img_cq_id, query = match(cq_image_url_pattern, query)
+    _, query = match(cq_image_url_pattern, query)
+    img_cq_id, query = match(cq_reply_pattern, query)
     img_base64, query = match(base64_image_pattern, query)
     img_custom, query = match(custom_image_url_pattern, query)
     images: list = []
     if img_cq_id:
-        res = requests.post(url=qq['cq-http-url'] + "/get_image",
-                            data={'file': img_cq_id}).json()
+        res = requests.post(url=qq['cq-http-url'] + "/get_msg",
+                            headers={"Authorization": "Bearer jqllxew"},
+                            data={'message_id': img_cq_id}).json()
+        print(res)
         if res["status"] == "ok":
-            images.append(Image.open(res["data"]["file"]))
+            cq_messages = res.get("data", {}).get("message", [{}])
+            for cq_msg in cq_messages:
+                if cq_msg.get("type") == "image":
+                    images.append(cq_msg.get("data", {}).get("url"))
     if img_base64:
         base64_data = base64.b64decode(img_base64[0])
         images.append(Image.open(BytesIO(base64_data)))

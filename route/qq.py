@@ -10,15 +10,14 @@ import ai
 from config import qq as qq_conf, match, cq_speech_md5_pattern
 from logger import logger
 from plugin.recog import get_speech_text, recog_voices_path
+from plugin.reply import send_private, send_group
 from plugin.tts import tts_url, tts_cos
-from plugin.tts.speechify_tts import speechify_tts
 
 qq_api = Blueprint("qq_api", __name__)
 cq_http_url = qq_conf['cq-http-url']  # CQ-http地址
 # @QQ号与昵称，因为有时是复制的@，所以有可能是@昵称
 at_qq = f"[CQ:at,qq={qq_conf['uid']}]"
 at_nickname = f"@{qq_conf['nickname']}"
-group_session = qq_conf['group-session']
 group_speech_reply = qq_conf['group-speech-reply']
 private_white_list = qq_conf['private-white-list']
 
@@ -45,100 +44,13 @@ def receive():
                 message = message.replace(at_qq, "", 1)
                 message = message.replace(at_nickname, "", 1)
                 message = message.strip()
-            _id = gid if group_session else uid
             if message[0] != "#":
                 message = f"[用户{uid}]说:" + message
-            msg_text = ai.main(_id, message, 'qq')
+            msg_text = ai.main(gid, message, 'qq', True)
             send_group(gid, uid, msg_text)
-    elif req_json.get('post_type') == 'request':
-        request_type = req_json.get('request_type')  # group
-        uid = req_json.get('user_id')
-        flag = req_json.get('flag')
-        comment = req_json.get('comment')
-        if request_type == "friend":
-            logger.info(f"[qq]好友申请:{uid} 验证信息:{comment}")
-            handle_friend_add(flag, "true")
-        if request_type == "group":
-            sub_type = req_json.get('sub_type')
-            gid = req_json.get('group_id')
-            if sub_type == "add":
-                logger.info(f"[qq]加群申请:{uid} 验证信息:{comment}")
-            elif sub_type == "invite":
-                logger.info(f"[qq]邀请进群:{uid} 群号:{gid}")
-                handle_group_invite(flag, "true")
     return json.dumps({
         "msg": "ok"
     })
-
-
-def _clamp_int(value, min_v=0, max_v=15, default=5):
-    try:
-        v = int(value)
-        return max(min_v, min(max_v, v))
-    except (TypeError, ValueError):
-        return default
-
-
-def _find_speech(text):
-    pattern = re.compile(
-        r'<speech\s+([^>]*)>(.*?)</speech>',
-        flags=re.DOTALL
-    )
-    _match = pattern.search(text)
-    if not _match:
-        return None
-
-    attr_str, content = _match.groups()
-    attrs = dict(re.findall(r'(\w+)="([^"]+)"', attr_str))
-
-    return {
-        "pitch": _clamp_int(attrs.get("pitch")),
-        "speed": _clamp_int(attrs.get("speed")),
-        "prompt": attrs.get("prompt"),
-        "text": content.strip()
-    }
-
-
-def send_private(uid, message):
-    if message:
-        res = requests.post(url=cq_http_url + "/send_private_msg",
-                            data={'user_id': int(uid), 'message': message}).json()
-        if res.get('status') != "ok":
-            logger.warn(f"[qq]send_private err:{res}")
-        speech = _find_speech(message)
-        print(f"speech: {speech}")
-        if speech and speech.get("text"):
-            speech_qq = f"[CQ:record,file={speechify_tts(uid, **speech)}]"
-            requests.post(url=cq_http_url + "/send_private_msg",
-                          data={'user_id': int(uid), 'message': speech_qq}).json()
-
-
-def send_group(gid, uid, message):
-    if message:
-        msg_text = f"[CQ:at,qq={uid}]\n" + message
-        res = requests.post(url=cq_http_url + "/send_group_msg",
-                            data={'group_id': int(gid), 'message': msg_text}).json()
-        if res["status"] != "ok":
-            logger.warn(f"[qq]send_group err:{res}")
-        speech = _find_speech(message)
-        if speech and speech.get("text"):
-            speech_qq = f"[CQ:record,file={speechify_tts(uid, **speech)}]"
-            requests.post(url=cq_http_url + "/send_group_msg",
-                          data={'group_id': int(gid), 'message': speech_qq}).json()
-
-
-def handle_friend_add(flag, approve):
-    res = requests.post(url=cq_http_url + "/set_friend_add_request",
-                        data={'flag': flag, 'approve': approve}).json()
-    if res["status"] != "ok":
-        logger.warn(f"[qq]handle_friend_add err:{res}")
-
-
-def handle_group_invite(flag, approve):
-    res = requests.post(url=cq_http_url + "/set_group_add_request",
-                        data={'flag': flag, 'sub_type': 'invite', 'approve': approve}).json()
-    if res["status"] != "ok":
-        logger.warn(f"[qq]handle_group_invite err:{res}")
 
 
 def _get_target(url, params, retry=3):

@@ -45,9 +45,10 @@ class ChatClaude(ChatGPT):
     def get_prompt(self, query=""):
         images, query = match_image(query)
         token_len, query = match(custom_token_len, query)
+        if not query:
+            return None, None
         if len(images):
             buffered = io.BytesIO()
-
             if isinstance(images[0], str):
                 img = Image.open(io.BytesIO(requests.get(images[0]).content))
             else:
@@ -81,6 +82,8 @@ class ChatClaude(ChatGPT):
 
     def generate(self, query: str, stream=False):
         prompt, token_len = self.get_prompt(query)
+        if not prompt:
+            return None
         if stream:
             return self._stream(prompt, token_len)
         return self._create(prompt, token_len)

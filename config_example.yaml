@@ -79,7 +79,6 @@ qq:
   cq-http-url: http://127.0.0.1:5700
   uid:  # qq号
   nickname:  # 昵称
-  group-session: true # 群聊时使用相同会话上下文
   group-speech-reply: true # 回复群语音
   private-white-list: # 私聊白名单，不配置则不限制
 

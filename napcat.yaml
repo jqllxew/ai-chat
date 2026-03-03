@@ -1,0 +1,18 @@
+
+networks:
+  docker-env_mynet3:
+    external: true
+
+services:
+  napcat:
+    image: mlikiowa/napcat-docker:latest
+    container_name: napcat
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "6099:6099"
+    #environment:
+    #  HTTP_PROXY: "http://172.18.202.1:7897"
+    #  HTTPS_PROXY: "http://172.18.202.1:7897"
+    networks:
+      - 'docker-env_mynet3'

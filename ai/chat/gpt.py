@@ -1,14 +1,15 @@
 import hashlib
 import json
-import time
-from io import BytesIO
 
+import httpx
+from openai import OpenAI
 from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
 
 import plugin
-from config import match, match_reply, match_image, custom_token_len
+from config import chat as conf, display
+from config import match, match_image, custom_token_len
 from logger import logger
-from plugin import tx_cos
+from plugin import tos
 from .chatai import ChatAI
 from ..base import OpenAIClient
 
@@ -21,7 +22,7 @@ class ChatGPT(ChatAI):
         self.max_req_tokens = None
         self.max_resp_tokens = None
         self._cache_len = {}
-        self.enable_function = False
+        self.enable_function = True
         self._model_select = model_select
         self.set_model_attr(model_id)
         self.set_system(default_system)
@@ -40,13 +41,28 @@ class ChatGPT(ChatAI):
         max_tokens = 12384
         max_resp_tokens = 512
         if model_select:
-            model_attrs = model_select.get(self.model_id)
+            model_attrs = model_select.get(model_id)
             if model_attrs:
                 max_tokens = model_attrs['max-tokens']
                 max_resp_tokens = model_attrs['max-resp-tokens']
         self.model_id = model_id
         self.max_resp_tokens = max_resp_tokens
         self.max_req_tokens = max_tokens - max_resp_tokens
+        if model_id.startswith("ep-"):
+            byteplus_api_key = display(conf["byteplus"]["doubao"]["api-key"])
+            byteplus_base_url = display(conf["byteplus"]["doubao"]["base-url"])
+            if self._client.client.api_key != byteplus_api_key:
+                self._client.client =OpenAI(
+                    api_key=byteplus_api_key, base_url=byteplus_base_url,
+                    http_client=httpx.Client(proxy="http://127.0.0.1:7897")
+                )
+        else:
+            openai_api_key = display(conf["openai"]["gpt"]["api-key"])
+            openai_base_url = display(conf["openai"]["gpt"]["base-url"])
+            if self._client.client.api_key != openai_api_key:
+                self._client.client = OpenAI(
+                    api_key=openai_api_key, base_url=openai_base_url
+                )
         return f"[{self.uid}]已切换模型{model_id}"
 
     def append_ctx(self, query=None, reply=None):
@@ -61,27 +77,24 @@ class ChatGPT(ChatAI):
         return self._cache_len['_len']
 
     def get_prompt(self, query=""):
-        query = match_reply(query)
+        flag = not query
         token_len, query = match(custom_token_len, query)
         images, query = match_image(query)
+        flag2 = not query
+        if not flag and flag2:
+            return None, None
         if len(images):
-            if query:
-                url = tx_cos.upload(
-                    f"{self.model_id}/{self.uid}/{int(time.time() * 1000)}.jpg",
-                    images[0]
-                )
-                logger.info(f"[{self.model_id}] img_url: {url}")
-                query = [{
-                    "type": "text",
-                    "text": query
-                }, {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": url
-                    }
-                }]
-            else:
-                return None, token_len
+            url = tos.upload(images[0], "jpg", "aichat")
+            logger.info(f"[{self.model_id}] img_url: {url}")
+            query = [{
+                "type": "text",
+                "text": f"{query}\n[CQ:image,file={url}]"
+            }, {
+                "type": "image_url",
+                "image_url": {
+                    "url": url
+                }
+            }]
         self.append_ctx(query)
         while self.get_prompt_len(self.ctx) > self.max_req_tokens:
             logger.warn(f"[{self.model_id}]{self.uid}:prompt_len "
@@ -117,7 +130,7 @@ class ChatGPT(ChatAI):
                     tool_args = json.loads(call.function.arguments)
                     # 执行实际函数
                     func = plugin.tool_map[tool_name]
-                    result = func(tool_args.get(plugin.param + "0"), self)
+                    result = func(_self=self, **tool_args)
                     # assistant 调用工具记录
                     self.ctx.append({
                         "role": "assistant",
@@ -137,6 +150,9 @@ class ChatGPT(ChatAI):
                         "content": result
                     })
                 prompt, _ = self.get_prompt()
+            elif response_message.content:
+                if not stream:
+                    return response_message.content
         res = client.chat.completions.create(
             model=self.model_id,
             max_tokens=token_len if token_len is not None else self.max_resp_tokens,

@@ -9,11 +9,12 @@ from .yi6b import Yi6b
 user_models: dict[str, ChatAI] = {}
 
 
-def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_ins=True) -> str:
+def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_ins=True, is_group=False) -> str:
     if 'gpt' == chat_type or 'chatgpt' == chat_type:
         if type(user_models.get(uid)) is not ChatGPT:
             user_models[uid] = ChatGPT(
                 uid=uid,
+                is_group=is_group,
                 model_id=display(chat_conf['openai']['gpt']['default']),
                 default_system=display(chat_conf['openai']['gpt']['default-system']),
                 from_type=from_type,
@@ -24,6 +25,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
         if type(user_models.get(uid)) is not ChatClaude:
             user_models[uid] = ChatClaude(
                 uid=uid,
+                is_group=is_group,
                 model_id=display(chat_conf['anthropic']['claude']['default']),
                 default_system=display(chat_conf['anthropic']['claude']['default-system']),
                 from_type=from_type,
@@ -36,6 +38,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
             glm_conf = chat_conf['thudm']['glm']
             user_models[uid] = ChatGLM(
                 uid=uid,
+                is_group=is_group,
                 from_type=from_type,
                 enable_ctx=enable_ctx,
                 model_id=glm_conf['model-id'],
@@ -49,6 +52,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
             spark_conf = chat_conf['iflytek']['spark']
             user_models[uid] = ChatSpark(
                 uid=uid,
+                is_group=is_group,
                 from_type=from_type,
                 enable_ctx=enable_ctx,
                 model_id=spark_conf['model-id'],
@@ -61,6 +65,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
             yi_conf = chat_conf['yi']['yi-6b-chat']
             user_models[uid] = Yi6b(
                 uid=uid,
+                is_group=is_group,
                 from_type=from_type,
                 enable_ctx=enable_ctx,
                 model_id=yi_conf['model-id'],
@@ -71,6 +76,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
         if type(user_models.get(uid)) is not DeepSeekApi:
             user_models[uid] = DeepSeekApi(
                 uid=uid,
+                is_group=is_group,
                 default_system=display(chat_conf['deepseek']['api']['default-system']),
                 from_type=from_type,
                 enable_ctx=enable_ctx,
@@ -80,6 +86,7 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
         if type(user_models.get(uid)) is not DeepSeekLocal:
             user_models[uid] = DeepSeekLocal(
                 uid=uid,
+                is_group=is_group,
                 model_id=display(chat_conf['deepseek']['local']['model-id']),
                 default_system=display(chat_conf['deepseek']['local']['default-system']),
                 from_type=from_type,
@@ -92,9 +99,9 @@ def u_change_model(uid, chat_type='', from_type=None, enable_ctx=True, enable_in
         return f"未找到 {chat_type}"
 
 
-def u_model(uid, from_type=None, enable_ctx=True, enable_ins=True) -> ChatAI:
+def u_model(uid, from_type=None, enable_ctx=True, enable_ins=True, is_group=False) -> ChatAI:
     if not user_models.get(uid):
-        u_change_model(uid, chat_conf['default'], from_type, enable_ctx, enable_ins)
+        u_change_model(uid, chat_conf['default'], from_type, enable_ctx, enable_ins, is_group)
     return user_models.get(uid)
 
 

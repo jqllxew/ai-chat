@@ -2,7 +2,7 @@ import ai.chat as chat
 import ai.image as image
 
 
-def main(uid: str, query: str, from_type: str):
+def main(uid: str, query: str, from_type: str, is_group=False):
     query = query.strip()
     if not query:
         return "请说出您的问题哦~"
@@ -16,7 +16,7 @@ def main(uid: str, query: str, from_type: str):
         image_type = query.replace("#changeimage", "", 1).strip()
         err = image.u_change_model(uid, image_type, from_type)
         return err or f"changed to {image_type}"
-    reply, err = chat.u_model(uid, from_type).reply(query)
+    reply, err = chat.u_model(uid, from_type=from_type, is_group=is_group).reply(query)
     return err or reply
 
 
